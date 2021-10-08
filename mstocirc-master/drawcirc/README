@@ -1,0 +1,4 @@
+./drawcirc.py circdraw.txt ./
+format:
+circRNAname circRNA_length CORF_start CORF_end IRES_start IRES_end exon_position informa nt_sequence aa_sequence
+ 
