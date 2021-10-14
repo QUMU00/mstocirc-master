@@ -20,7 +20,7 @@ usage: python3 analyze-tool4.py [-h] -p PEPTIDE [-s SEQUENCE] [-j JUNCTION] [-i 
 
 project21-10-14/
 
-feature                       | function name         | description                                     |  directory
+feature                         function name             description                                     |  directory
 ------------------------------|-----------------------|-------------------------------------------------|----------------
 main function                  map_corf               map MS-based on circRNA ORF                       1mapp_corf
                                sklearn_codinng        assess the circRNA-derived peptides               1.5skcoding
@@ -33,8 +33,8 @@ optional fucntion              rem_peptide            remove MS-based repeat pep
                                circ_classify          classify the circRNAs into six groups             7option
                                circ_annote            annote the circRNA by host gene function          7option
                                ms_ribo                add directive evidence Ribo-seq,                  7option                      
------------------------------|-----------------------|--------------------------------------------------|-----------------
-generate 'result' directory
+
+<br>generate 'result' directory
  
 
 ## FOUR. install requirement:
