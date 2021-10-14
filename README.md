@@ -19,8 +19,9 @@ usage: python3 analyze-tool4.py [-h] -p PEPTIDE [-s SEQUENCE] [-j JUNCTION] [-i 
 ## THREE. function presention
 
 project21-10-14/
-------------------------------|-----------------------|-------------------------------------------------|
+
 feature                       | function name         | description                                     | folder
+------------------------------|-----------------------|-------------------------------------------------|-----------------------
 main function                 | map_corf              | map MS-based on circRNA ORF                     | 1mapp_corf
      2                        | sklearn_codinng       | assess the circRNA-derived peptides             | 1.5skcoding
      3                        | map_junct             | screen MS-based peptide spanning BSJ            | 2mapp_junct
@@ -28,6 +29,7 @@ main function                 | map_corf              | map MS-based on circRNA 
      5                        | ires_predict          | predict all the possible IRES elements          | 4ires_predict
      6                        | path_analysis         | GO enrichment and KEGG pathways                 | 5enrich
      7                        | draw_circ             | draw picture of the circRNAs                    | 6draw_circ
+------------------------------|-----------------------|-------------------------------------------------|-------------------
 optional fucntion             | rem_peptide           | remove MS-based repeat peptide                  | 7option
      2                        | circ_classify         | classify the circRNAs into six groups           | 7option
      3                        | circ_annote           | annote the circRNA by host gene function        | 7option
