@@ -6,7 +6,7 @@ usage: python3 analyze-tool4.py [-h] -p PEPTIDE [-s SEQUENCE] [-j JUNCTION] [-i 
                         [--transcript TRANSCRIPT]
 ### for example: 
 ~$ python3 analyze-tool4.py -s seqence.fasta -p peptide.txt -j junction.fasta
-~$ python3 analyze-tool4.py -i circRNA_info3.txt -g GCF_000001735.4_TAIR10.1_genomic.fna -a Arabidopsis_thaliana.TAIR10.47.gtf -p peptide2.txt -j junction2.fasta 
+<br> ~$ python3 analyze-tool4.py -i circRNA_info3.txt -g GCF_000001735.4_TAIR10.1_genomic.fna -a Arabidopsis_thaliana.TAIR10.47.gtf -p peptide2.txt -j junction2.fasta 
 
 
 ## TWO. input files format description:
