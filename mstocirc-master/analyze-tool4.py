@@ -11,7 +11,8 @@ import re
 
 
 
-#refer to link https://blog.csdn.net/weixin_37621790/article/details/86682831
+#merge and sort fuantion, refer to link https://www.runoob.com/python3/python-merge-sort.html
+#here we are gratedful to its works,
 ##merge sort for sort the large list efficiently 
 def merge(arr,l,m,r): 
   n1=m-l+1
@@ -87,7 +88,7 @@ def rem_peptide():
     mergeSort(arr,0,n-1)
     aa_seq=''
     for line_t in arr:
-      if (aa_seq!=line_t):
+      if (aa_seq!=line_t[3]):
         aa_seq=line_t[3]
         line_t[0],line_t[3]=line_t[3],line_t[0]
         temp_file_rep.append('\t'.join(line_t)+'\n')
@@ -198,12 +199,26 @@ def map_corf():
 #------------------------sequence analysis---------
 #---------------------------------------------------
 
-def sequence_composition_analysis():
-  print('begin ro run seqComp...')
-  print('need created...')
+try:
+  from sklearn.linear_model import LogisticRegressionCV
+except ImportError:
+  print('sklearn module not exists! mstocirc trys to install it for python. ')
+  os.system('pip3 install -U scikit-learn')
+  
+
+def sklearn_coding():
+  print('begin ro run SKCoding...')
+  if not os.path.exists(projectn+'/1.5skcoding'):
+    os.system('mkdir '+projectn+'/1.5skcoding')
+  global file_name
+  file_name2=file_name
+  file_name=file_name.split('.')[0]+'_sklc.txt'
+  fo=open(projectn+'/1.5skcoding/'+file_name,'w+')
+  fo.write('sequence\tspecificity\tcircRNA\thost_gene\tcoding_potential\tcorf\n')
+  global temp_file
+  os.system('python3 sklearn/sklearn_coding.py  sklearn/data %s/1mapp_corf/%s %s/1.5skcoding/%s'%(projectn,file_name2,projectn,file_name))
+  temp_file=(open(projectn+'/1.5skcoding/'+file_name,'r+').readlines())[1:]
   print('.........SeqComp finsihed!!...............')
-
-
 
 
 
@@ -221,7 +236,7 @@ def map_junct():
   fi=open(args.junction,'r+')
   #fj=open(projectn+'/1mapp_corf/peptide_corf.txt','r+')
   fo=open(projectn+'/2mapp_junct/' +file_name,'w+')
-  fo.write('BSJ_span\tpeptide\tspecificity\tcircRNA\thost_gene\tcorf_aa\n')
+  fo.write('BSJ_span\tpeptide\tspecificity\tcircRNA\thost_gene\tcoding_potential\tcorf_aa\n')
   reh=[]
   req=[]
   for si in fi.readlines():
@@ -340,7 +355,7 @@ def peptide_merge_lr(pep_list):
       else:
         pep_list3.append(pep_list[jj])
     pep_list=pep_list3
-    line_mg=['','','','','','']
+    line_mg=['','','','','','','']
     for jj in range(3,len(pep_list2[0])):
       line_mg[jj]=pep_list2[0][jj]
 
@@ -378,7 +393,7 @@ def peptide_merge():
   file_name=file_name.split('.')[0]+'_exd.txt'
   fo=open(projectn+'/3peptide_merge/'+file_name,'w+')
   #fi=open(projectn+'/2mapp_junct/peptide_corf_junct.txt','r+')
-  fo.write('BSJ_span\tpeptide\tmerge_peptide\tspecificity\tcircRNA\thost_gene\tcorf\n')
+  fo.write('BSJ_span\tpeptide\tmerge_peptide\tspecificity\tcircRNA\thost_gene\tcoding_potential\tcorf\n')
   global temp_file
   temp_file_merge=[]
   arr=[]
@@ -424,11 +439,11 @@ def peptide_merge():
 
 #function:to predict the ires
 
-try:
-  from sklearn.linear_model import LogisticRegressionCV
-except ImportError:
-  print('sklearn module not exists! mstocirc trys to install it for python. ')
-  os.system('pip3 install -U scikit-learn')
+#try:
+#  from sklearn.linear_model import LogisticRegressionCV
+#except ImportError:
+#  print('sklearn module not exists! mstocirc trys to install it for python. ')
+#  os.system('pip3 install -U scikit-learn')
   
 
 def ires_predict():
@@ -446,7 +461,7 @@ def ires_predict():
   fj=open(projectn+'/1mapp_corf/circRNA_exon.fasta','r+')
   fo=open(projectn+'/4ires_predict/'+file_name,'w+')
   
-  fo.write('BSJ_span\tpeptide\tmerge_peptide\tspecificty\tcircRNA\thost_gene\tIRES_element\tcorf\n')
+  fo.write('BSJ_span\tpeptide\tmerge_peptide\tspecificty\tcircRNA\thost_gene\tIRES_element\tcoding_potential\tcorf\n')
   file_num=1
   fp=open(projectn+'/4ires_predict/circRNA_ires_%d.fasta'%file_num,'w+')
   #fi.readline()
@@ -608,6 +623,17 @@ def path_analysis():
       os.makedirs(projectn+'/5enrich')
     fo=open(projectn+'/5enrich/query3.tsv','w+')
     global temp_file
+    spec_list=['hsa','ath']
+    spec=''
+    while(1):
+      spec=input('please input specices [ath for arabidopsis, hsa for human]:')
+      if (spec in spec_list):
+        break
+      else:
+        jud=input('whether try again (yes or no)')
+        if(jug[0]=='N' or jug[0]=='n'):
+          print('-----------------enrichment finished!!------------------------')
+          return
     if(len(temp_file)<300):
        print('circRNA less than <300, skip this part.')
        print('--------------enrichment finished!!-------------')
@@ -616,7 +642,7 @@ def path_analysis():
     for line in temp_file:
       fo.write('\t'.join(line.split('\t')[:7])+'\n')
     fo.close()
-    os.system('Rscript rpathway/pathways.R %s/5enrich'%projectn)
+    os.system('Rscript rpathway/pathways.R %s/5enrich %s'%(projectn,spec))
     
   print('--------------enrichment finished!!---------------')
 
@@ -645,7 +671,7 @@ def ms_ribo():
     print('loading files over...')
     fm=open(args.junction,'r+')
     
-    fo.write('BSJ_span\tpeptide\tmerge_peptide\tspecificty\tcircRNA\thost_gene\tIRES_element\tRibo_evidence\tcorf\n')
+    fo.write('BSJ_span\tpeptide\tmerge_peptide\tspecificty\tcircRNA\thost_gene\tIRES_element\tcoding_potential\tRibo_evidence\tcorf\n')
     if not os.path.exists(projectn+'/7option'):
       os.makedirs(projectn+'/7option')
     
@@ -723,11 +749,16 @@ def circ_annote():
     global file_name
     file_name=file_name.split('.')[0]+'_anno.txt'
     fo=open(projectn+'/7option/'+file_name,'w+')
-    #file_p=input('input annotion.gtf name:')
-    file_p='Araport11_functional_descriptions_20190930.txt'
+    file_p=input('input annotion.gtf name:')
+    #file_p='Araport11_functional_descriptions_20190930.txt'
     fi=open(file_p,'r+')
     temp_file_si=fi.readlines()
-    fo.write('BSJ_span\tpeptide\tmerge_peptide\tspecifity\tcircRNA\thost_gene\tIRES\tcorf\tfunction\n')
+    #fo.write('BSJ_span\tpeptide\tmerge_peptide\tspecifity\tcircRNA\thost_gene\tIRES\tcorf\tfunction\n')
+    sss='BSJ_span\tpeptide\tmerge_peptide\tspecifity\tcircRNA\thost_gene\tIRES\tcoding_potential\tcorf\tfunction\n'
+    ssst=sss.split('\t')
+    if('ribo' in file_name):
+      ssst.insert(-2,'Ribo_evidence')
+    fo.write('\t'.join(ssst))
     global temp_file
     temp_file_anno=[]
     for sj in temp_file:
@@ -973,7 +1004,7 @@ rem_peptide()
 #why other can change the value of paramater,but I can't do that, 
 map_corf()
 #003
-sequence_composition_analysis()
+sklearn_coding()
 #004
 map_junct()
 #
@@ -1014,7 +1045,7 @@ else:
 
 
 
-tempn=' /1mapp_corf /2mapp_junct /3peptide_merge /4ires_predict /6draw_circ /7option' 
+tempn=' /1mapp_corf /1.5skcoding /2mapp_junct /3peptide_merge /4ires_predict /6draw_circ /7option' 
 # save the predix of temporal file directory
 tempn.replace(projectn+'/','/')
 cc=input('delete the temporary file(yes or no??):')
