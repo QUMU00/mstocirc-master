@@ -45,7 +45,10 @@ program. Except enrichment analysis part dependent on package 'clusterProfiler' 
 that *python3 installation for your computer is necessary condition to run mstocirc*. If you want the tool to analyze the GO term and KEGG pathways，R is suggested to be 
 installed together. But both python3 and R are the well-used programming languages for science research，therefore it's easy to satisfy the requirements for mstocirc. 
 Mstocirc doesn't rely on other tool (e.g. bedtool)，but like other application developed by python3 it needs some dependencies，'matplotlib' and 'scikit-learn' module for 
-python3 and package 'clusterProfiler' for R. You can install all the dependencies before running mstocirc，or tempt to run with file in'/ data'. And the tool will tempt firstly to install them automatically, during this period please keep the Internet connected. 
+python3 and package 'clusterProfiler' for R. You can install all the dependencies before running mstocirc，or tempt to run with files in'/ data'. And the tool will tempt 
+firstly to install them automatically, during this period please keep the Internet connected. 
+   We introduce IRESfinder (https://github.com/xiaofengsong/IRESfinder) into this tool for function IRES_predict, and to show the respect to the original authors, we
+ <br> we on purpose add this paragraph. 
    please keep your important input file format as same as the test input file recognized well by mstocirc. And there are not specific requirements for general input file ，
 such as genome sequences file (.fa, .fna format) and genome annotation file (.gtf or .gff format) but we recommend to download them from NCBI website. 
 To perform one specific function of small program, here we do not describe them about how to use in detail, and README file in their own directory are available which 
