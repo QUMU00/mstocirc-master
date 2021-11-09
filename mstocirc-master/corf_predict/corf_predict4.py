@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #*_coding: utf-8_*
-__author__='qumu0000'
+__author__='QUMU00'
 
 
 import argparse
