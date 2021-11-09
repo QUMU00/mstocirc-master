@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-__Author__='QUMU0000'
+__Author__='QUMU00'
 
 import numpy
 import matplotlib.pyplot as pltt
