@@ -1,6 +1,6 @@
 #!/usr/bin/python3
  
-__Author__='qumu00'
+__Author__='QUMU00'
 ## edited on July 28th by gedit,
  
 
@@ -218,7 +218,7 @@ def sklearn_coding():
   global temp_file
   os.system('python3 sklearn/sklearn_coding.py  sklearn/data %s/1mapp_corf/%s %s/1.5skcoding/%s'%(projectn,file_name2,projectn,file_name))
   temp_file=(open(projectn+'/1.5skcoding/'+file_name,'r+').readlines())[1:]
-  print('.........SeqComp finsihed!!...............')
+  print('.........assess corf finsihed!!...............')
 
 
 
@@ -294,8 +294,8 @@ def map_gene():
     global temp_file
     temp_file_gen=[]
     global file_name
-    #file_nn=input('please input the linear protein file: ')
-    file_nn='GCF_000001735.4_TAIR10.1_protein.faa'
+    file_nn=input('please input the linear protein file: ')
+    #file_nn='GCF_000001735.4_TAIR10.1_protein.faa'
     fi=open(file_nn,'r+')
     file_name=file_name.split('.')[0]+'_gen.txt'
     fo=open(projectn+'/7option/'+file_name,'w+')
@@ -311,15 +311,24 @@ def map_gene():
     protein.append(proteinn)
     
     print('remove peptides...')
+    proteina=[]
+    proteinb=[]
     for line in temp_file:
       lint=line.split('\t')
       wr='y'
+      if(lint[1] in proteina):
+        continue
+      if(lint[1] in proteinb):
+        temp_file_gen.append(line)
+        continue
       for proteinn in protein:
         if(lint[1] in proteinn):
           wr='n'
+          proteina.append(lint[1])
           #print(line)
           break
       if(wr=='y'):
+        proteinb.append(lint[1])
         temp_file_gen.append(line)
     
     print('write result into files...')
