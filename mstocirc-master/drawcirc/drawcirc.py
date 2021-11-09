@@ -95,6 +95,7 @@ def drawcircle(strr,px):
   orf_s2=orf_s
   j=1
   theta2=numpy.arange(0,2,0.1)
+  xx_x,xx_y=0,0
   while(orf_s2<=orf_e):
     if(orf_s2<=0.5*j):
       if(orf_s2+0.5>=orf_e):
@@ -109,11 +110,12 @@ def drawcircle(strr,px):
       x=a+wr*numpy.sin(theta2)
       y=wb+wr*numpy.cos(theta2)
       axes.plot(x,y,'g')
-    
+      if(xx_y==0):
+         xx_x,xx_y=x[0],y[0]
       orf_s2=0.5*j
     j=j+1
-  jj=random.randint(0,len(x)-1)
-  pltt.text(x[jj]+0.05,y[jj],'open reading frame')
+  #jj=random.randint(0,len(x)-1)
+  pltt.text(xx_x+0.05,xx_y,'open reading frame')
 
   # draw Ires
   ir=2.25
@@ -278,7 +280,7 @@ count=1
 for si in fi.readlines():
   if(si[0]=='#'):
     continue
-  if(int(si.split(',')[1])>1500):
+  if(int(si.split(',')[1])>1500 or int(si.split(',')[5])<50):
     continue
   drawcircle(si.strip(),sys.argv[2])
   drawcirclew(si.strip(),sys.argv[2])
