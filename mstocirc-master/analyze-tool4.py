@@ -630,7 +630,7 @@ def path_analysis():
       if (spec in spec_list):
         break
       else:
-        jud=input('whether try again (yes or no)')
+        jug=input('whether try again (yes or no)')
         if(jug[0]=='N' or jug[0]=='n'):
           print('-----------------enrichment finished!!------------------------')
           return
