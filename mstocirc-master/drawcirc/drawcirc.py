@@ -13,6 +13,7 @@ import sys
 #
 # https://finthon.com/matplotlib-color-list/
 
+
 listcolor=['red','cyan','green','black','yellow','gold','darkviolet']
 
 a,b=0.,0.
@@ -46,6 +47,7 @@ def drawcircle(strr,px):
   #strr=input(":")
   #print(strr)
   #pltt.plot(211)
+
   strr=strr.split(',')[:8]
   #print(strr)
   nam=strr[0]
@@ -78,8 +80,8 @@ def drawcircle(strr,px):
   x,y=line(0,2.0)
   axes.plot(x,y,'yellow')
   pltt.text(x[0]+0.15,y[0],'junction site')
+  # line for junction site, color is yellow
   
-  #draw  open reading frame,orf
   wb=b-0.1
   wr=wr-0.1
   orf_s=orf_st/leng
@@ -87,10 +89,11 @@ def drawcircle(strr,px):
   x,y=line(orf_s*2*numpy.pi,2.0)
   axes.plot(x,y,'green')
   pltt.text(x[len(x)-1]+0.15,y[len(y)-1],'ATG,initation translation site')
+  # line for ATG, color is green
   x,y=line(orf_e*2*numpy.pi,2.0)
   axes.plot(x,y,'red')
   pltt.text(x[len(x)-1]+0.15,y[len(y)-1],'TGA,translation termation site')
-  
+  # line for TGA, color is red
   
   orf_s2=orf_s
   j=1
@@ -181,9 +184,8 @@ def drawcirclew(strr,px):
   #print(nm) 
   rp=[]
   rp2=[]
-  print('orgn',ll)
+  #print('orgn',ll)
   if(ll*0.8>280):
-    print('1')
     for i in range(0,len(nm)-1):
       if(nm[i+1]-nm[i]>ll*0.2):  
         li=(ll-280)*(nm[i+1]-nm[i]+1)//ll+3
@@ -200,7 +202,7 @@ def drawcirclew(strr,px):
       if(rp[i]!=0):
         rp[i]=rp[i]-lrp
         #circ=circ.replace('...',rp[i])
-        print(rp[i],circ)
+        #print(rp[i],circ)
         circ=circ[:rp[i]]+'...'+circ[rp[i]+rp2[i]:]
         lrp=rp2[i]+lrp-3
         nm[i+1]=nm[i+1]-lrp
@@ -215,7 +217,7 @@ def drawcirclew(strr,px):
   #cORF='012345678901234567890123456789012345'
   # to randomly delete partial sequences of aimed dna and peptide  
   ll=len(circ)
-  print('del,',ll)
+  #print('del,',ll)
   fig = pltt.figure(figsize=(10, 10),dpi=80)
   ax = fig.add_subplot(111)
   ax.axis('equal')
@@ -276,19 +278,25 @@ def drawcirclew(strr,px):
 fi=open(sys.argv[1],'r+')
 #cc=input('whether or not show the drawing picture:')
 cc='no'
+# to determine whether to show or not during drawing figures,
 count=1
 for si in fi.readlines():
+# read drawing paramaters from files,
   if(si[0]=='#'):
     continue
   if(int(si.split(',')[1])>1500 or int(si.split(',')[5])<50):
     continue
+  # circRNAs whose full length is too big ,or the ones without IRES elements ,are not drawn into fiegurs,
   drawcircle(si.strip(),sys.argv[2])
   drawcirclew(si.strip(),sys.argv[2])
   if(cc[0]=='y' or cc[0]=='Y'):
     pltt.show()
   if(count>=10):
-    print('there will consume too many memory while more than 10 figurs is opened .\n\
-you can set the input file to draw the specific circRNA.\nthankyou.')
+    #when drawing more than 20 firgures, program automatically exits  
+    print('there will consume too many memory while more \
+than 10 figures is opened.\nyou can set the input\
+file to draw the specific circRNA.\
+\nthankyou.')
     break
   count=count+1
 fi.close()
