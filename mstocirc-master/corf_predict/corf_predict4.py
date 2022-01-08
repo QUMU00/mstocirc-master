@@ -6,108 +6,19 @@ __author__='QUMU00'
 import argparse
 import os
 import re
+from multiprocessing import Pool
+from multiprocessing import Manager
+import time
+from gnexon import proano
+from transla import RNA_protein
+from crexon3 import circRNA_extractp
+from listsp import listsplit
 
-def proano():
-  print('extract the exon positon from the annotion.gtf...')
-  fi=open(args.annotion,'r+')
-  fo=open('corf_predict/exon_infor.txt','w+')
-  fp=open('corf_predict/exon_infor2.txt','w+')
-  lock_gene=0
-  llock=0
-  exon_cstr=[]
-  exon_cend=[]
-  exon_str2=[]
-  exon_end2=[]
-  chrm=[]
-  chrm2=[]
-  std=''
-  stdl=[]
-  stdl2=[]
-  cuunt=0
-  #for sp in fi.readlines():
-  while(1):
-    sp=fi.readline()
-    if(sp==''):
-      break
+curPATH=os.path.split(os.path.realpath(__file__))[0]
 
-    sp=sp.strip()
-    spp=sp.split('\t')
-    #print(spp)
-    if(sp[:2]=='#!' or sp[0]=='#'): 
-      continue 
-    #print '03'
-    fp.write('chr'+spp[0]+'\t'+spp[2]+'\t'+spp[3]+'\t'+spp[4]+'\t%s\n'%spp[6])
-    if(spp[2]=='gene'):
-      lock_gene=lock_gene+1
-    if(spp[2]=='transcript' or spp[2]=='mRNA' or spp[2]=='lnc_RNA'):
-      #print('transcript')
-      llock=1
-    if(lock_gene%2==0):
-      llock=1
-      lock_gene=lock_gene-1
-      
-    if(spp[2]=='exon' and llock==0):
-      #print(spp[3],spp[4])
-      chrm.append('chr'+spp[0])
-      chrm2.append('chr'+spp[0])
-      exon_str2.append(spp[3])
-      exon_end2.append(spp[4])
-      #std=spp[6]
-      stdl.append(spp[6])
-      stdl2.append(spp[6])
-      
-      
-    if(llock==1):
-      num=len(exon_str2)
-      llock=0
-      
-      if(num==0):
-        continue
-      for i in range(0,num):
-          
-        if(stdl[i]=='+'):
-          exon_cstr.append(exon_str2[i])
-          exon_cend.append(exon_end2[i])
-          #print '01'
-          fo.write(chrm[i]+'\texon\t'+exon_str2[i]+'\t'+exon_end2[i]+'\t'+stdl[i]+'\n')
-        else:
-          exon_cstr.append(exon_str2[num-1-i])
-          exon_cend.append(exon_end2[num-1-i])
-          fo.write(chrm[num-1-i]+'\texon\t'+exon_str2[num-1-i]+'\t'+exon_end2[num-1-i]+'\t'+stdl[num-1-i]+'\n')
-      
-      exon_str2=[]
-      exon_end2=[]
-      chrm=[]
-      stdl=[]
-      #chrm.append('~')
-      chrm2.append('~')
-      #stdl.append('~')
-      stdl2.append('~')
-      exon_cstr.append('~')
-      exon_cend.append('~')
-      fo.write('~\texon\t~\t~\t~\n')
-    
-  num=len(exon_str2)
+
  
-  for i in range(0,num):
-    if(stdl[i]=='+'):
-      exon_cstr.append(exon_str2[i])
-      exon_cend.append(exon_end2[i])
-          #print '01'
-      fo.write(chrm[i]+'\texon\t'+exon_str2[i]+'\t'+exon_end2[i]+'\t'+stdl[i]+'\n')
-    else:
-      exon_cstr.append(exon_str2[num-1-i])
-      exon_cend.append(exon_end2[num-1-i])
-      fo.write(chrm[num-1-i]+'\texon\t'+exon_str2[num-1-i]+'\t'+exon_end2[num-1-i]+'\t'+stdl[num-1-i]+'\n')
-  #print(len(chrm2),len(exon_cstr),len(exon_cend),len(stdl2))
-  #for i in range(0,len(exon_cstr)):
-  #  fo.write(chrm[i]+'\t'+'exon'+'\t'+exon_cstr[i]+'\t'+exon_cend[i]+'\t'+stdl[i]+'\n')
-  fi.close()
-  fo.close()
-  fp.close()
-  return chrm2,exon_cstr,exon_cend,stdl2
-  
-
+'''
 def exgain():
   proano()
   print('acquire the exon position of circRNA...')
@@ -197,18 +108,18 @@ def exgain():
   fo.close()
   fj.close()
   return dict(zip(cirh,exoo))
-
+'''
 
 def exgain2():
   #proano()
-  chrm,exon_str,exon_end,strd=proano()
+  chrm,exon_str,exon_end,strd=proano(args.annotion,curPATH)
   #fi=open('corf_predict/exon_infor.txt','r+')
   print('acquire exon position of the circRNA...')
   fj=open(args.input,'r+')
-  
-  
-  fo=open('corf_predict/__TEMP_exon.txt','w+')
-  fq=open('corf_predict/error.txt','w+')
+  fo=open(curPATH+'/__TEMP_exon.txt','w+')
+  fq=open(curPATH+'error.txt','w+')
+
+  mgr=Manager()
   chrm_exon_dict=dict()
   chrmm=''
   exon_strr=[]
@@ -235,58 +146,23 @@ def exgain2():
   chrm_exon_dict[chrmm+'_exon_end']=exon_endd
   chrm_exon_dict[chrmm+'_strd']=strdd
   
-  exoo=[]
-  strddd=''
+  exoo=mgr.list()
+  fq_temp_list=mgr.list()
+  fo_temp_list=mgr.list()
+  pool=Pool(processes=16)
+  
   fj.readline()
-  for sj in fj.readlines():
-    sjt=['','','','','','','']
-    sjtt=sj[:-1].split('\t')
-    #sjt: circID, null,chrm.start,end,gene_symbl,null
-    #input: chrom start end strand circRNA_ID transcript gene_symbol
-    sjt[0]=sjtt[4]
-    sjt[2]=sjtt[0]
-    sjt[3]=sjtt[1]
-    sjt[4]=sjtt[2]
-    sjt[5]=sjtt[6]
-     
-    print(sjt[0])
-    str_ind=0
-    exos_str=''
-    exos_end=''
-    
-    
-    for i in range(0,len(chrm_exon_dict['chr%s_exon_str'%sjt[2]])):
-      if(chrm_exon_dict['chr%s_exon_str'%sjt[2]][i]==sjt[3]):
-        str_ind=i
-        strddd=chrm_exon_dict['chr%s_strd'%sjt[2]][i]
-        fq.write(sjt[0]+'\t'+chrm_exon_dict['chr%s_exon_str'%sjt[2]][i]+'\t'+strddd+'\n')
-        print('dfg-1')
-        break
-    if(str_ind==0):
-      continue
-    #for i in range(str_ind,len(chrm_exon_dict['chr%s_exon_end'%sjt[2]])):
-    for i in range(str_ind,str_ind+50):
-      #print(sjt[4])
-      if(i>=len(chrm_exon_dict['chr%s_exon_end'%sjt[2]]) or chrm_exon_dict['chr%s_exon_end'%sjt[2]][i]=='~'):
-        break
-      #if():
-      #  break
-      if(chrm_exon_dict['chr%s_exon_end'%sjt[2]][i]==sjt[4]):
-        print('dfg-2')
-        exos_str=exos_str+','+chrm_exon_dict['chr%s_exon_str'%sjt[2]][i]
-        exos_end=exos_end+','+sjt[4]
-        exoo.append(sjt[0]+' '+sjt[2]+' '+sjt[3]+' '+sjt[4]+' %s '%sjt[5]+strddd+' '+exos_str[1:]+' '+exos_end[1:])
-        fo.write(sjt[0]+' '+sjt[2]+' '+sjt[3]+' '+sjt[4]+' %s '%sjt[5]+strddd+' '+exos_str[1:]+' '+exos_end[1:]+'\n')
-        break
-      
-      if(chrm_exon_dict['chr%s_exon_str'%sjt[2]][i]==sjt[3]):
-        exos_str=''
-        exos_end=''
-      exos_str=exos_str+','+chrm_exon_dict['chr%s_exon_str'%sjt[2]][i]
-      exos_end=exos_end+','+chrm_exon_dict['chr%s_exon_end'%sjt[2]][i]      
-    
+  list_sj=listsplit(fj.readlines(),75)
+  for list_list_sj in list_sj:
+    pool.apply_async(circRNA_extractp,(exoo,fq_temp_list,fo_temp_list,list_list_sj,chrm_exon_dict))
+  pool.close()
+  pool.join()     
+   
+  fo.writelines(fo_temp_list)
+  fq.writelines(fq_temp_list) 
   fj.close()
   fo.close()
+  fq.close()
   return exoo
 
 
@@ -312,7 +188,7 @@ def fagain():
   fj=open(args.genome,'r+')
   #fm=open(args.input,'r+')
   fo=open(args.output+'/circRNA_exon.fasta','w+')
-  fp=open('corf_predict/__monitor__.txt','w+')
+  fp=open(curPATH+'/__monitor__.txt','w+')
   fq=open(args.output+'/circ_draw.txt','w+')
   
   exon_str=[]
@@ -391,9 +267,6 @@ def fagain():
   fo.close()
   fp.close()
   fq.close()    
-
-
-
 
 
 
@@ -518,70 +391,9 @@ def fagain3():
 
 
 
-
-
 #---------------------------------------------
 #-------------orf predict---------------------
 #---------------------------------------------
-
-def RNA_protein(RNA_string):
-
-  #start_code = 'ATG'
-  #end_code = ['UAA', 'UAG', 'UGA']
-  protein_table = {'TTT': 'F', 'CTT': 'L', 'ATT': 'I', 'GTT': 'V', \
-  'TTC': 'F', 'CTC': 'L', 'ATC': 'I', 'GTC': 'V', \
-  'TTA': 'L', 'CTA': 'L', 'ATA': 'I', 'GTA': 'V', \
-  'TTG': 'L', 'CTG': 'L', 'ATG': 'M', 'GTG': 'V', \
-  'TCT': 'S', 'CCT': 'P', 'ACT': 'T', 'GCT': 'A', \
-  'TCC': 'S', 'CCC': 'P', 'ACC': 'T', 'GCC': 'A', \
-  'TCA': 'S', 'CCA': 'P', 'ACA': 'T', 'GCA': 'A', \
-  'TCG': 'S', 'CCG': 'P', 'ACG': 'T', 'GCG': 'A', \
-  'TAT': 'Y', 'CAT': 'H', 'AAT': 'N', 'GAT': 'D', \
-  'TAC': 'Y', 'CAC': 'H', 'AAC': 'N', 'GAC': 'D', \
-  'TAA': '*', 'CAA': 'Q', 'AAA': 'K', 'GAA': 'E', \
-  'TAG': '*', 'CAG': 'Q', 'AAG': 'K', 'GAG': 'E', \
-  'TGT': 'C', 'CGT': 'R', 'AGT': 'S', 'GGT': 'G', \
-  'TGC': 'C', 'CGC': 'R', 'AGC': 'S', 'GGC': 'G', \
-  'TGA': '*', 'CGA': 'R', 'AGA': 'R', 'GGA': 'G', \
-  'TGG': 'W', 'CGG': 'R', 'AGG': 'R', 'GGG': 'G'}
-  
-  #start_sit = re.search(start_code, RNA_string)
-  protein_list=[]
-  index_list=[]
-  
-  RNA_string2=RNA_string+RNA_string[:3]
-  RNA_string3=RNA_string*3
-  pm=0
-  while(1):
-    pm=(RNA_string2).find('ATG')
-    #print(pm)
-    rp='y'
-    if(pm<0):
-      break
-    for ii in range(0,len(index_list)):
-      if((pm+1-index_list[ii])%3==0 and pm+1-index_list[ii]<len(protein_list[ii])*3):
-        RNA_string2=RNA_string2[:pm]+'@'+RNA_string2[pm+1:]
-        rp='n'
-        break
-    if(rp=='n'):
-      continue
-    RNA_string2=RNA_string2[:pm]+'@'+RNA_string2[pm+1:]
-    pm=pm+3
-    protein='M'
-    for sit in range(pm,((len(RNA_string3)-pm)//3)*3+pm, 3):
-      protein = protein + protein_table[RNA_string3[sit:sit+3]]
-      #print(protein)
-      if (protein_table[RNA_string3[sit:sit+3]]=='*'):    
-        break
-    if(len(protein)>20):
-      protein_list.append(protein)
-      index_list.append(pm-2) 
-  
-  return protein_list,index_list
-  #RNA_string = open('E:\\bioinfo\data\\rosalind_prot\\rosalind_prot.txt', 'r').read().strip()
-  #mRNA_protein(RNA_string)
-
-
 
 
 def orf_predict():
@@ -612,27 +424,38 @@ def orf_predict():
 #--------------------------------------------
 #----------------main function---------------
 #-----------------------------------------------
-              
+t1=time.time()              
 parser=argparse.ArgumentParser()
-parser.add_argument('--input','-i',help='statics file be treated.')
-parser.add_argument('--sequence','-s',help='circRNA spliced sequnce')
-parser.add_argument('--output','-o',help='output file name necessary',default='circRNA_exon_result.fasta')
-parser.add_argument('--annotion','-a',help='genomic annotion file to extract exon')
-parser.add_argument('--genome','-g',help='genome fasta file to extract sequence')
+group=parser.add_mutually_exclusive_group()
+group.add_argument('--input','-i',help='circRNA detailed information file,eg,the chromosome number, start position, host gene,etc.')
+group.add_argument('--sequence','-s',help='circRNA spliced sequnce,fa or fasta, used to straightly predict the circular ORFs')
+parser.add_argument('--output','-o',help='output file name necessary',default='.')
+parser.add_argument('--annotion','-a',help='genomic annotion file of model species to collect exon absolute position information.')
+parser.add_argument('--genome','-g',help='genome file, downloaded from NCBI, fna,fa or fasta, to extract sequence')
 parser.add_argument('--transcript','-t',help='rna.fa')
 args=parser.parse_args()
 
+mode=0
+#mode choice, based  on given files,
 if(args.sequence!=None):
   fagain2()
+  model=3
 elif(args.transcript!=None):
   fagain3()
+  model=2
 elif(args.annotion!=None):
   fagain()
+  model=1
 else:
+  # cannot satify any conditions above, 
+  print('some files lacked makes it fail to run.')
   exit(0)
 
 orf_predict()
-#os.system('rm corf_predict/exon_infor.txt corf_predict/__monitor__.txt corf_predict/__TEMP_exon.txt')
+if(model==1):
+  os.system('rm /exon_infor.txt /__monitor__.txt /__TEMP_exon.txt'.replace('/',curPATH+'/'))
+t2=time.time()
+print('cost time: %f s.'%(t2-t1))
 
               
       
