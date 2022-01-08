@@ -8,80 +8,74 @@ import os
 import time
 import argparse
 import re
+import zipfile
+import shutil
+import pandas
+from header.pepsort import mergeSort
+from header.pepmerge import peptide_merge_lr
 
 
+#-----------------------------------------------
+#define transform .txt to .xlsx
 
-#merge and sort fuantion, refer to link https://www.runoob.com/python3/python-merge-sort.html
-#here we are gratedful to its works,
-##merge sort for sort the large list efficiently 
-def merge(arr,l,m,r): 
-  n1=m-l+1
-  n2=r-m 
-  # 创建临时数组
-  L=[0]*(n1)
-  R=[0]*(n2)
-  # 拷贝数据到临时数组 arrays L[] 和 R[] 
-  for i in range(0,n1): 
-    L[i]=arr[l+i] 
-  for j in range(0,n2):    
-    R[j]=arr[m+1+j] 
-    # 归并临时数组到 arr[l..r] 
-  i=0     # 初始化第一个子数组的索引
-  j=0     # 初始化第二个子数组的索引
-  k=l     # 初始归并子数组的索引
-  while (i<n1 and j<n2): 
-    if (L[i][3]<=R[j][3]):
-    #if(comp(L[i],R[j])): 
-      arr[k]=L[i] 
-      i+=1
-    else: 
-      arr[k] = R[j] 
-      j+=1
-    k+=1
-   # 拷贝 L[] 的保留元素
-  while (i<n1): 
-    arr[k]=L[i] 
-    i+=1
-    k+=1
- 
-  # 拷贝 R[] 的保留元素
-  while (j<n2): 
-    arr[k]=R[j] 
-    j+=1
-    k+=1
+def txttoxlsx(path):
+  fi=open(path,'r+')
+  data1=fi.readlines()
+  pd_data=pandas.DataFrame(data1)
+  pd_file_name=path[::-1].split('.',1)[-1][::-1]+'.xlsx'
+  pd_data.to_excel(pd_file_name,sheet_name='1111',index=False)
+
+  return pd_file_name
+
+
+#------------------------------------------------------
+#-------------define a class peptide_prediction--------
+#-----------------------------------------------------
+
+class peptide_prediction():
+  def __init__(self,temp_file,file_name,header0):
+    self.temp_file=temp_file
+    self.file_name=file_name
+    self.header=header0
   
-def mergeSort(arr,l,r): 
-    if (l < r): 
-        m = (l+(r-1))//2
-        mergeSort(arr, l, m) 
-        mergeSort(arr, m+1, r) 
-        merge(arr, l, m, r) 
+  def funct_print(self):
+    print ('==============================================')
+    print ('=                                            =')
+    print ('=  function:                                 =')
+    print ('=  rem_peptide  map_corf  sklearn_coding     =')
+    print ('=  map_junct    map_gene  peptide_merge      =')
+    print ('=  ires_predict path_analysis  ribo_ms       =')
+    print ('=  circ_annote  circ_classify  draw_circ     =')
+    print ('=  map_gene                                  =')
+    print ('=                                            =')
+    print ('==============================================')
+
+
 
 #------------------------------------------------------
 #-----------------remove repeat peptide----------------
 #------------------------------------------------------
 
 ##functions: when there exist same peptide sequence in the peptide, the func can remove the same ones
-def rem_peptide():
+def rem_peptide(self):
   print('begin to remove the same peptide sequence...')
   cc=input('whether to remove the repeat peptides(yse or no):')
   #cc='yes'
   if(cc[0]=='Y' or cc[0]=='y'):
-    if not os.path.exists(projectn+'/7option'):
-      os.system('mkdir '+projectn+'/7option')
-    global file_name
-    file_name=file_name.split('.')[0]+'_rep.txt'
-    fo=open(projectn+'/7option/'+file_name,'w+')
-    global temp_file
+    if not os.path.exists(projectn+'/temp_option'):
+      os.system('mkdir '+projectn+'/temp_option')
+    self.file_name=self.file_name.split('.')[0]+'_rep.txt'
+    fo=open(projectn+'/temp_option/'+self.file_name,'w+')
+    fo.write(self.header)
     temp_file_rep=[]
     #file format sequence  specificty circRNA q-value
-
     arr=[]
-    for line in temp_file:
+    for line in self.temp_file:
       line_t=line[:-1].split('\t')
-      aa=line_t[0]
+      aa_seq=line_t[0]
+      #amino acid sequence, 
       line_t[0]=line_t[3]
-      line_t[3]=aa
+      line_t[3]=aa_seq
       arr.append(line_t)
       
     n=len(arr)
@@ -93,27 +87,27 @@ def rem_peptide():
         line_t[0],line_t[3]=line_t[3],line_t[0]
         temp_file_rep.append('\t'.join(line_t)+'\n')
         
-    temp_file=temp_file_rep  
-    fo.writelines(temp_file)
+    self.temp_file=temp_file_rep  
+    fo.writelines(self.temp_file)
     fo.close()  
   print('------------remove_peptide finished!!------------')
   
+peptide_prediction.rem_peptide=rem_peptide
 
 #------------------------------------------------------
 #----------------map onto the cORF---------------------
 #------------------------------------------------------
 
 #function: mapp the peptide sequence on circRNA to obtain the circRNAs whose peptides of the intact coRF
-def map_corf():
+def map_corf(self):
   print('begin run the map_corf,,,')
-  if(not os.path.exists(projectn+'/1mapp_corf')):
-    os.system('mkdir '+projectn+'/1mapp_corf')
+  if(not os.path.exists(projectn+'/temp_mapp_corf')):
+    os.system('mkdir '+projectn+'/temp_mapp_corf')
   
-  global file_name
-  file_name=file_name.split('.')[0]+'_corf.txt'
+  self.file_name=self.file_name.split('.')[0]+'_corf.txt'
   #fj=open(args.corf,'r+')
   print('step1: predict circRNA ORF,,,')
-  command_line='-o %s'%(projectn+'/1mapp_corf')
+  command_line='-o %s'%(projectn+'/temp_mapp_corf')
   if(args.sequence!=None):
     command_line=command_line+' -s %s'%args.sequence
   elif(args.transcript!=None):
@@ -121,19 +115,23 @@ def map_corf():
   elif(args.annote!=None):
     command_line=command_line+' -i %s -g %s -a %s'%(args.info,args.genome,args.annote)
   else:
-    exit(0)
     print('Error')
+    exit(0)
+  # there exists three models for cORF prediction, 
+  # and the input files by user will guide the program which model to be choose, 
 
   #if(args.sequence!=''):
   #  os.system('python3 corf_predict/corf_predict6.py -s %s -o %s'%(args.sequence,projectn+'/1mapp_corf'))
   #else:
   #  os.system('python3 corf_predict/corf_predict4.py -i '+args.info+' -g corf_predict/has_genome.fa -a corf_predict/hsa_genome.gff -o '+projectn+'/1mapp_corf/')
+
   os.system('python3 corf_predict/corf_predict4.py %s'%command_line)
-  fj=open(projectn+'/1mapp_corf/circRNA_corf.txt','r+')
-  fo=open(projectn+'/1mapp_corf/'+file_name,'w+')
+  fj=open(projectn+'/temp_mapp_corf/circRNA_corf.txt','r+')
+  fo=open(projectn+'/temp_mapp_corf/'+self.file_name,'w+')
   
   
-  fo.write('sequence\tspecificity\tcircRNA\thost_gene\tcorf\n')
+  self.header='sequence\tspecificity\tcircRNA\thost_gene\tcorf\n'
+  fo.write(self.header)
   
   print('step2: map the peptide onto the corf,,,')
   sjky=[]
@@ -160,9 +158,8 @@ def map_corf():
   sjky.append(circ_n)  
 
   dict_sj=dict(zip(sjky,sjval))
-  global temp_file
   temp_file_corf=[]  
-  for si in temp_file:
+  for si in self.temp_file:
     sit=si.split('\t')
     circl=sit[2].strip('/').split('/')
     #print(circl)
@@ -184,16 +181,16 @@ def map_corf():
         if(sit[0] in circ_corf[ii]):
           temp_file_corf.append(sit[0]+'\t'+sit[1]+'\t'+circl[i]+'\t%s\t'%circ_corf[0]+circ_corf[ii]+'\n')         
         
-  temp_file=temp_file_corf
+  self.temp_file=temp_file_corf
   print('write into file...')
-  fo.writelines(temp_file)
+  fo.writelines(self.temp_file)
   
   
   fj.close()
   fo.close()
   print('--------finished map corf-----------')
   
-
+peptide_prediction.map_corf=map_corf
 
 #--------------------------------------------------
 #------------------------sequence analysis---------
@@ -204,22 +201,24 @@ try:
 except ImportError:
   print('sklearn module not exists! mstocirc trys to install it for python. ')
   os.system('pip3 install -U scikit-learn')
-  
+# judge whether scikit-learn is installed already,
+# if not ,it will be tried to install automatically,  
 
-def sklearn_coding():
-  print('begin ro run SKCoding...')
-  if not os.path.exists(projectn+'/1.5skcoding'):
-    os.system('mkdir '+projectn+'/1.5skcoding')
-  global file_name
-  file_name2=file_name
-  file_name=file_name.split('.')[0]+'_sklc.txt'
-  fo=open(projectn+'/1.5skcoding/'+file_name,'w+')
-  fo.write('sequence\tspecificity\tcircRNA\thost_gene\tcoding_potential\tcorf\n')
-  global temp_file
-  os.system('python3 sklearn/sklearn_coding.py  sklearn/data %s/1mapp_corf/%s %s/1.5skcoding/%s'%(projectn,file_name2,projectn,file_name))
-  temp_file=(open(projectn+'/1.5skcoding/'+file_name,'r+').readlines())[1:]
+def sklearn_coding(self):
+  print('begin to run SKCoding...')
+  if not os.path.exists(projectn+'/temp_skcoding'):
+    os.system('mkdir '+projectn+'/temp_skcoding')
+  file_name2=self.file_name
+  self.file_name=self.file_name.split('.')[0]+'_sklc.txt'
+  fo=open(projectn+'/temp_skcoding/'+self.file_name,'w+')
+  self.header='sequence\tspecificity\tcircRNA\thost_gene\tcoding_potential\tcorf\n'
+  fo.write(self.header)
+  
+  os.system('python3 sklearn/sklearn_coding.py  sklearn/data %s/temp_mapp_corf/%s %s/temp_skcoding/%s'%(projectn,file_name2,projectn,self.file_name))
+  self.temp_file=(open(projectn+'/temp_skcoding/'+self.file_name,'r+').readlines())[1:]
   print('.........assess corf finsihed!!...............')
 
+peptide_prediction.sklearn_coding=sklearn_coding
 
 
 #------------------------------------------------
@@ -227,16 +226,18 @@ def sklearn_coding():
 #--------------------------------------------------
 
 # function to map peptide on the BSJ OF circRNA 
-def map_junct():
+def map_junct(self):
   print('begin to map onto the BSJ,,, ')
-  if not os.path.exists(projectn+'/2mapp_junct'):
-    os.system('mkdir '+projectn+'/2mapp_junct')
-  global file_name
-  file_name=file_name.split('.')[0]+'_junct.txt'
+  if not os.path.exists(projectn+'/temp_mapp_junct'):
+    os.system('mkdir '+projectn+'/temp_mapp_junct')
+  
+  self.file_name=self.file_name.split('.')[0]+'_junct.txt'
   fi=open(args.junction,'r+')
   #fj=open(projectn+'/1mapp_corf/peptide_corf.txt','r+')
-  fo=open(projectn+'/2mapp_junct/' +file_name,'w+')
-  fo.write('BSJ_span\tpeptide\tspecificity\tcircRNA\thost_gene\tcoding_potential\tcorf_aa\n')
+  fo=open(projectn+'/temp_mapp_junct/' +self.file_name,'w+')
+  self.header='BSJ_span\tpeptide\tspecificity\tcircRNA\thost_gene\tcoding_potential\tcorf_aa\n'
+  fo.write(self.header)
+
   reh=[]
   req=[]
   for si in fi.readlines():
@@ -247,13 +248,13 @@ def map_junct():
     req.append(si.strip())
   print('create the dict() for junction.fasta...')  
   dict_junt=dict(zip(reh,req))
-  global temp_file
+  
   temp_file_junt=[]
   #fj.readline()
   #temp_file=fj.readlines()
   
   print('judge the spanning amino acid amount...')  
-  for str1 in temp_file:
+  for str1 in self.temp_file:
     ss=str1.split('\t')
     lgh=len(ss[0])
     
@@ -270,7 +271,7 @@ def map_junct():
          else:
            temp_file_junt.append('YY%d\t'%(lgh2/2-pp)+str1)
            #print ss[1]+' '+pr[j]
-  temp_file=temp_file_junt
+  self.temp_file=temp_file_junt
 
   print('write into files...')
   fo.writelines(temp_file_junt)
@@ -279,26 +280,31 @@ def map_junct():
   fo.close()
   print('------------map_junct finished-------------')
 
+peptide_prediction.map_junct=map_junct
 
 
 #------------------------------------------------------
 #------------------------------------------------------
 #-----------------------------------------------------
-def map_gene():
+def map_gene(self):
   print('begin to run map_gene...')
   cc=input('whther map the peptides onto the linear protein(yes or no): ')
   #cc='no'
   if(cc[0]=='y' or cc[0]=='Y'):
-    if( not os.path.exists(projectn+'/7option')):
-      os.makedirs(projectn+'/7option')
-    global temp_file
+    if( not os.path.exists(projectn+'/temp_option')):
+      os.makedirs(projectn+'/temp_option')
     temp_file_gen=[]
-    global file_name
     file_nn=input('please input the linear protein file: ')
     #file_nn='GCF_000001735.4_TAIR10.1_protein.faa'
+    while( not os.path.exists(file_nn)):
+      file_nn=input('file not exists,input again or q() for exit: ')
+      if(file_nn=='q()'):
+        print('----------------map_gene finished!!----------------------')
+
     fi=open(file_nn,'r+')
-    file_name=file_name.split('.')[0]+'_gen.txt'
-    fo=open(projectn+'/7option/'+file_name,'w+')
+    self.file_name=self.file_name.split('.')[0]+'_gen.txt'
+    fo=open(projectn+'/temp_option/'+self.file_name,'w+')
+    fo.write(self.header)
     protein=[]
     proteinn=''
     print('extract linear proteins...')
@@ -313,7 +319,7 @@ def map_gene():
     print('remove peptides...')
     proteina=[]
     proteinb=[]
-    for line in temp_file:
+    for line in self.temp_file:
       lint=line.split('\t')
       wr='y'
       if(lint[1] in proteina):
@@ -333,14 +339,14 @@ def map_gene():
     
     print('write result into files...')
     fo.writelines(temp_file_gen)
-    temp_file=temp_file_gen
+    self.temp_file=temp_file_gen
     
     fi.close()
     fo.close() 
 
   print('----------------map_gene finished!!--------------------')   
 
-
+peptide_prediction.map_gene=map_gene
 
 
 
@@ -351,64 +357,23 @@ def map_gene():
 #---------------------merge the overlappinng peptide--------
 #--------------------------------------------------------
 
-def peptide_merge_lr(pep_list):
-  #print(pep_list)
-  line_mgg=[]
-  while(pep_list!=[]):
-    pep_list2=[]
-    pep_list3=[]
-    corf=pep_list[0][-1]
-    for jj in range(0,len(pep_list)):
-      if (pep_list[jj][-1]==corf):
-        pep_list2.append(pep_list[jj])
-      else:
-        pep_list3.append(pep_list[jj])
-    pep_list=pep_list3
-    line_mg=['','','','','','','']
-    for jj in range(3,len(pep_list2[0])):
-      line_mg[jj]=pep_list2[0][jj]
-
-    ll=pep_list2[0][-1].find(pep_list2[0][1])
-    rr=pep_list2[0][-1].find(pep_list2[0][1])+len(pep_list2[0][1])
-    
-    for line in pep_list2:
-      for jj in range(0,3):
-        line_mg[jj]=line_mg[jj]+','+line[jj]
-    
-      if(line[1] in line[-1][ll:rr]):
-         continue
-      elif(line[-1][ll:rr] in line[1]):
-        ll=line[-1].find(line[1])
-        rr=line[-1].find(line[1])+len(line[1])
-       
-      else:
-        if(ll>line[-1].find(line[1])):
-          ll=line[-1].find(line[1])
-        if(rr<line[-1].find(line[1])+len(line[1])):
-          rr=line[-1].find(line[1])+len(line[1])
-        
-          
-    line_mg.insert(2,line_mg[-1][ll:rr])
-    line_mgg.append(line_mg)
-  return line_mgg
-
 #function: map on the corf and merge the overlaping peptide to the longest and single peptide od spanning the BSJ 
-def peptide_merge():
+def peptide_merge(self):
   print('begin run the merge,,,')
-  if not os.path.exists(projectn+'/3peptide_merge'):
-    os.makedirs(projectn+'/3peptide_merge')
+  if not os.path.exists(projectn+'/temp_peptide_merge'):
+    os.makedirs(projectn+'/temp_peptide_merge')
   
-  global file_name
-  file_name=file_name.split('.')[0]+'_exd.txt'
-  fo=open(projectn+'/3peptide_merge/'+file_name,'w+')
-  #fi=open(projectn+'/2mapp_junct/peptide_corf_junct.txt','r+')
-  fo.write('BSJ_span\tpeptide\tmerge_peptide\tspecificity\tcircRNA\thost_gene\tcoding_potential\tcorf\n')
-  global temp_file
+  
+  self.file_name=self.file_name.split('.')[0]+'_exd.txt'
+  fo=open(projectn+'/temp_peptide_merge/'+self.file_name,'w+')
+  #fi=open(projectn+'/temp_mapp_junct/peptide_corf_junct.txt','r+')
+  self.header='BSJ_span\tpeptide\tmerge_peptide\tspecificity\tcircRNA\thost_gene\tcoding_potential\tcorf\n'
+  fo.write(self.header)
   temp_file_merge=[]
   arr=[]
   #fi.readline()
   #temp_file=fi.readlines()
-  for si in temp_file:
+  for si in self.temp_file:
     sit=si.split('\t')
     arr.append(sit) 
   n=len(arr)
@@ -433,13 +398,13 @@ def peptide_merge():
     temp_file_merge.append('\t'.join(line_megg))
   print('write into file...')
   fo.writelines(temp_file_merge)
-  temp_file=temp_file_merge
+  self.temp_file=temp_file_merge
   #fi.close()
   fo.close()
-  
-  
+ 
   print('------------peptide_merge finished---------')
 
+peptide_prediction.peptide_merge=peptide_merge
 
   
 #--------------------------------------------------------
@@ -455,24 +420,23 @@ def peptide_merge():
 #  os.system('pip3 install -U scikit-learn')
   
 
-def ires_predict():
+def ires_predict(self):
   print('begin to run ires_predict,,,')
-  if not os.path.exists(projectn+'/4ires_predict'):
-    os.system('mkdir '+projectn+'/4ires_predict')
+  if not os.path.exists(projectn+'/temp_ires_predict'):
+    os.system('mkdir '+projectn+'/temp_ires_predict')
   
-  global file_name
   #file_name='PT6415_18_corf_junct_exd.txt'
-  file_name=file_name.split('.')[0]+'_ires.txt'
-  global temp_file
+  self.file_name=self.file_name.split('.')[0]+'_ires.txt'
   temp_file_ires=[]
-  #fi=open(projectn+'/3peptide_merge/PT6415_18_corf_junct_exd.txt','r+')
+  #fi=open(projectn+'/temp_peptide_merge/PT6415_18_corf_junct_exd.txt','r+')
   #fj=open(args.info,'r+')
-  fj=open(projectn+'/1mapp_corf/circRNA_exon.fasta','r+')
-  fo=open(projectn+'/4ires_predict/'+file_name,'w+')
+  fj=open(projectn+'/temp_mapp_corf/circRNA_exon.fasta','r+')
+  fo=open(projectn+'/temp_ires_predict/'+self.file_name,'w+')
   
-  fo.write('BSJ_span\tpeptide\tmerge_peptide\tspecificty\tcircRNA\thost_gene\tIRES_element\tcoding_potential\tcorf\n')
+  self.header='BSJ_span\tpeptide\tmerge_peptide\tspecificty\tcircRNA\thost_gene\tIRES_element\tcoding_potential\tcorf\n'
+  fo.write(self.header)
   file_num=1
-  fp=open(projectn+'/4ires_predict/circRNA_ires_%d.fasta'%file_num,'w+')
+  fp=open(projectn+'/temp_ires_predict/circRNA_ires_%d.fasta'%file_num,'w+')
   #fi.readline()
   #temp_file=fi.readlines()
   print('step1:extract sequence...')
@@ -488,7 +452,7 @@ def ires_predict():
     seq_dict[circ_name]=sj.strip()
   #print(seq_dict)
   
-  for si in temp_file:
+  for si in self.temp_file:
     sit=si.split('\t')
     #print(si)
     
@@ -515,7 +479,7 @@ def ires_predict():
       fp.close()
       seq_acount=1
       file_num=file_num+1
-      fp=open(projectn+'/4ires_predict/circRNA_ires_%d.fasta'%file_num,'w+')
+      fp=open(projectn+'/temp_ires_predict/circRNA_ires_%d.fasta'%file_num,'w+')
     else:
       fp.write('>%s\n'%sit[4].split('_',1)[1])
       fp.write(seq_dict[sit[4].split('_',1)[1]][:300]+'\n')
@@ -527,12 +491,12 @@ def ires_predict():
   #print(file_num)
   for ii in range(0,file_num):
     #print('haha...ires')
-    os.system('python3 IRESfinder-master/IRESfinder.py -f '+projectn+'/4ires_predict/circRNA_ires_%d.fasta -o '%(ii+1)+projectn+'/4ires_predict/circRNA_ires_%d.res -m 2 -w 50 -s 50'%(ii+1))
-  os.system('cat %s/4ires_predict/circRNA_ires*.res >%s/4ires_predict/circRNA_ires.res'%(projectn,projectn))
-  os.system('cat %s/4ires_predict/circRNA_ires*.fasta >%s/4ires_predict/circRNA_ires.fasta'%(projectn,projectn))
-  os.system('rm %s/4ires_predict/circRNA_ires_*'%projectn)
-  fk=open(projectn+'/4ires_predict/circRNA_ires.res','r+')
-  fl=open(projectn+'/1mapp_corf/circ_draw.txt','r+')
+    os.system('python3 IRESfinder-master/IRESfinder.py -f '+projectn+'/temp_ires_predict/circRNA_ires_%d.fasta -o '%(ii+1)+projectn+'/temp_ires_predict/circRNA_ires_%d.res -m 2 -w 50 -s 50'%(ii+1))
+  os.system('cat %s/temp_ires_predict/circRNA_ires*.res >%s/temp_ires_predict/circRNA_ires.res'%(projectn,projectn))
+  os.system('cat %s/temp_ires_predict/circRNA_ires*.fasta >%s/temp_ires_predict/circRNA_ires.fasta'%(projectn,projectn))
+  os.system('rm %s/temp_ires_predict/circRNA_ires_*'%projectn)
+  fk=open(projectn+'/temp_ires_predict/circRNA_ires.res','r+')
+  fl=open(projectn+'/temp_mapp_corf/circ_draw.txt','r+')
   sfl=fl.readlines()
   
   ires_dict=dict()
@@ -557,12 +521,12 @@ def ires_predict():
   #sfk=fk.readlines()
   temp_file_fl=[]
   fl.close()
-  fl=open(projectn+'/4ires_predict/circ_draw.txt','w')
+  fl=open(projectn+'/temp_ires_predict/circ_draw.txt','w')
   sl_dict=dict()
   for sl in sfl:
     slt=sl.split(',',1)
     sl_dict[slt[0]]=slt[1]
-  for si in temp_file:
+  for si in self.temp_file:
     sit=si.split('\t')
     ires='non-ires'
     ires_s='0'
@@ -602,14 +566,17 @@ def ires_predict():
     
   fo.writelines(temp_file_ires)
   fl.writelines(temp_file_fl)
-  temp_file=temp_file_ires 
+  self.temp_file=temp_file_ires 
   
   print('-----------IRES analyse finished!!----------------')
   #fi.close()
   fj.close()
   fk.close()
   fo.close()
-  fp.close()    
+  fp.close() 
+
+peptide_prediction.ires_predict=ires_predict
+   
 
 #------------------------------------------------------
 #-----------------------------------------------------
@@ -623,15 +590,14 @@ def m6a_modification_predict():
 
 #------------------------------------------------------
 #------------------------------------------------------
-def path_analysis():
+def path_analysis(self):
   print('begin to run path_analysis')
   #cc=input('R must be installed,whether to RUN(yes or no):')
   cc='yes'
   if(cc[0]=='Y' or cc[0]=='y'):
-    if not os.path.exists(projectn+'/5enrich'):
-      os.makedirs(projectn+'/5enrich')
-    fo=open(projectn+'/5enrich/query3.tsv','w+')
-    global temp_file
+    if not os.path.exists(projectn+'/temp_enrich'):
+      os.makedirs(projectn+'/temp_enrich')
+    fo=open(projectn+'/temp_enrich/query3.tsv','w+')
     spec_list=['hsa','ath']
     spec=''
     while(1):
@@ -643,52 +609,59 @@ def path_analysis():
         if(jug[0]=='N' or jug[0]=='n'):
           print('-----------------enrichment finished!!------------------------')
           return
-    if(len(temp_file)<300):
+    if(len(self.temp_file)<300):
        print('circRNA less than <300, skip this part.')
        print('--------------enrichment finished!!-------------')
        return 
     fo.write('BSJ_span\tpeptide\tmerge_peptide\tspecificty\tcircRNA\thost_gene\tIRES_element\n')
-    for line in temp_file:
+    for line in self.temp_file:
       fo.write('\t'.join(line.split('\t')[:7])+'\n')
     fo.close()
     os.system('Rscript rpathway/pathways.R %s/5enrich %s'%(projectn,spec))
     
   print('--------------enrichment finished!!---------------')
 
+peptide_prediction.path_analysis=path_analysis
 
 
+
 #------------------------------------------------------
 #------------------------------------------------------
 #------------------------------------------------------
-def ms_ribo():
+def ms_ribo(self):
   print('begin to run ms_ribo...')
   cc=input('need provide ribo evidence in .fasta, whether to run: ')
   #cc='no'
   if(cc[0]=='Y' or cc[0]=='y'):
-    if not os.path.exists(projectn+'/7option'):
-      os.makedirs(projectn+'/7option')
-    global temp_file
-    global file_name
+    if not os.path.exists(projectn+'/temp_option'):
+      os.makedirs(projectn+'/temp_option')
+    
     temp_file_ribo=[]
-    file_name=file_name.split('.')[0]+'_ribo.txt'
+    self.file_name=self.file_name.split('.')[0]+'_ribo.txt'
     print('create 2 files for result saving...')
-    fo=open(projectn+'/7option/'+file_name,'w+')
-    fp=open(projectn+'/7option/'+file_name.replace('_ribo','_ribo2'),'w+')
-    #file_ribo=input('please input the ribo ribo-sse evidence file(.faa):')
-    file_ribo='ath_pep.fa.faa'
+    fo=open(projectn+'/temp_option/'+self.file_name,'w+')
+    fp=open(projectn+'/temp_option/'+self.file_name.replace('_ribo','_ribo2'),'w+')
+    file_ribo=input('please input the ribo ribo-seq evidence file(.faa):')
+    #file_ribo='ath_pep.fa.faa'
+    while(not os.path.exists(file_ribo)):
+      file_ribo=input('file not exists, input again or q() for exit:')
+      if (file_p=='q()'):
+        print('-----------------ms_ribo finished!!-----------------------')
+
     fj=open(file_ribo,'r+')
     print('loading files over...')
     fm=open(args.junction,'r+')
     
-    fo.write('BSJ_span\tpeptide\tmerge_peptide\tspecificty\tcircRNA\thost_gene\tIRES_element\tcoding_potential\tRibo_evidence\tcorf\n')
-    if not os.path.exists(projectn+'/7option'):
-      os.makedirs(projectn+'/7option')
+    self.header='BSJ_span\tpeptide\tmerge_peptide\tspecificty\tcircRNA\thost_gene\tIRES_element\tcoding_potential\tRibo_evidence\tcorf\n'
+    fo.write(self.header)
+    if not os.path.exists(projectn+'/temp_option'):
+      os.makedirs(projectn+'/temp_option')
     
      
     sjl=fj.readlines()
     temp_ribo=[[],[],[]]
     dict_rb=dict()
-    for si in temp_file:
+    for si in self.temp_file:
       sit=si.split('\t')
       llk=0
       ribo='N'
@@ -736,41 +709,46 @@ def ms_ribo():
             if(llllck==0):
               break
     fo.writelines(temp_file_ribo)
-    temp_file=temp_file_ribo
+    self.temp_file=temp_file_ribo
     for i in range(0,3):
       fp.writelines(temp_ribo[i])
       fp.write('\n---------\n')
 
   print('............ms_ribo finished!!........')
-  
+
+peptide_prediction.ms_ribo=ms_ribo  
 
 
 #------------------------------------------------------
 #-----------------------------------------------------
 #------------------------------------------------------
-def circ_annote():
+def circ_annote(self):
   print('begin to run circ_annote...')
   cc=input('whether to annote the circRNA(yes or no):')
   #cc='no'
   if(cc.lower()[0]=='y'):
-    if not os.path.exists(projectn+'/7option'):
-      os.system('mkdir '+projectn+'/7option')
-    global file_name
-    file_name=file_name.split('.')[0]+'_anno.txt'
-    fo=open(projectn+'/7option/'+file_name,'w+')
+    if not os.path.exists(projectn+'/temp_option'):
+      os.system('mkdir '+projectn+'/temp_option')
+    self.file_name=self.file_name.split('.')[0]+'_anno.txt'
+    fo=open(projectn+'/temp_option/'+self.file_name,'w+')
     file_p=input('input annotion.gtf name:')
+    while( not os.path.exists(file_p)):
+      file_p=input('file not exists ,input annotion.gtf name again ,or q() to exit:')
+      if(file_p=='q()'):
+        print('-----------------circ_annote finished!!-----------------------------')
+        return
+
     #file_p='Araport11_functional_descriptions_20190930.txt'
     fi=open(file_p,'r+')
     temp_file_si=fi.readlines()
     #fo.write('BSJ_span\tpeptide\tmerge_peptide\tspecifity\tcircRNA\thost_gene\tIRES\tcorf\tfunction\n')
-    sss='BSJ_span\tpeptide\tmerge_peptide\tspecifity\tcircRNA\thost_gene\tIRES\tcoding_potential\tcorf\tfunction\n'
-    ssst=sss.split('\t')
-    if('ribo' in file_name):
+    self.header='BSJ_span\tpeptide\tmerge_peptide\tspecifity\tcircRNA\thost_gene\tIRES\tcoding_potential\tcorf\trelative function description\n'
+    ssst=self.header.split('\t')
+    if('ribo' in self.file_name):
       ssst.insert(-2,'Ribo_evidence')
     fo.write('\t'.join(ssst))
-    global temp_file
     temp_file_anno=[]
-    for sj in temp_file:
+    for sj in self.temp_file:
       sjt=sj.strip().split('\t')
       function='null\n'
       for si in temp_file_si:
@@ -781,22 +759,22 @@ def circ_annote():
       sjt.append(function)
       temp_file_anno.append('\t'.join(sjt))    
     
-    temp_file=temp_file_anno  
+    self.temp_file=temp_file_anno  
     fo.writelines(temp_file_anno)
     fi.close()
     fo.close()
       
   print('------------circ_annote finished!!-----------------------')
 
-
+peptide_prediction.circ_annote=circ_annote
 
 
 
   
 def circ_corf_info(strr):
   print('extract the....')
-  fi=open(projectn+'/4ires_predict/circ_draw.txt','r+')
-  fj=open(projectn+'/1mapp_corf/circRNA_corf.txt','r+')
+  fi=open(projectn+'/temp_ires_predict/circ_draw.txt','r+')
+  fj=open(projectn+'/temp_mapp_corf/circRNA_corf.txt','r+')
   fo=open(projectn+'%s/circ_draw.txt'%strr,'w+')
   #temp_file_fj=fj.readlines()
   sj_dict=dict()
@@ -834,6 +812,7 @@ def circ_corf_info(strr):
     #      sit.insert(2,orf_p[0])
     #      break
     #    dg='n' 
+
     orf_po=sj_dict[sit[0]+','+sit[-1].split('-',1)[-1]]
     sit.insert(2,orf_po[1])
     sit.insert(2,orf_po[0]) 
@@ -842,7 +821,7 @@ def circ_corf_info(strr):
   fo.close()
   fi.close()
   fj.close()
-  #os.system('drawcirc/drawcirc.py '+projectn+'/6draw_circ/circ_draw.txt '+projectn+'/6draw_circ/')
+  #os.system('drawcirc/drawcirc.py '+projectn+'/temp_draw_circ/circ_draw.txt '+projectn+'/temp_draw_circ/')
   
   
   
@@ -851,24 +830,23 @@ def circ_corf_info(strr):
 #-------------------------------------------------------
 #-------------------------------------------------------
 #-------------------------------------------------------
-def circ_classify():
+def circ_classify(self):
   print('begin to run circ_classify...')
   cc=input('whether to classify circRNA(yes or no):')
   #cc='yes'
   if(cc.lower()[0]=='y'):
     #print('need created...')
-    if(not os.path.exists(projectn+'/7option')):
-      os.makedirs(projectn+'/7option')
-    global file_name
+    if(not os.path.exists(projectn+'/temp_option')):
+      os.makedirs(projectn+'/temp_option')
     #file_name='PT6415_18_corf_junct_exd_ires.txt'
-    file_name=file_name.split('.')[0]+'_clf.txt'
-    circ_corf_info('/7option')
-    fi=open(projectn+'/7option/circ_draw.txt','r+')
+    self.file_name=self.file_name.split('.')[0]+'_clf.txt'
+    circ_corf_info('/temp_option')
+    fi=open(projectn+'/temp_option/circ_draw.txt','r+')
     #fj=open(projectn+'/4ires_predict/PT6415_18_corf_junct_exd_ires.txt','r+')
-    fo=open(projectn+'/7option/circ_draw_clf.txt','w+')
-    fp=open(projectn+'/7option/'+file_name,'w+')
+    fo=open(projectn+'/temp_option/circ_draw_clf.txt','w+')
+    fp=open(projectn+'/temp_option/'+self.file_name,'w+')
+    fp.write(self.header)
     #fq=open(projectn+'/7option/error.txt','w+')
-    global temp_file
     #fj.readline()
     #temp_file=fj.readlines()
     temp_file_clf=[[],[],[],[],[],[]]
@@ -891,11 +869,11 @@ def circ_classify():
       else:
         j=1
       temp_file_clf[2*i+j].append(si)
-      for sj in temp_file:
+      for sj in self.temp_file:
         if(sit[0] in sj and sit[-1].strip().split('-',1)[-1] in sj):
           #fq.write('%d '%(i*2+j)+' '+sit[0]+' '+sj)
           temp_file_clf2[2*i+j].append(sj)
-          print('klkl')
+          #print('klkl')
           break
           #print(2*i+j,sj)
     temp_file=[]
@@ -903,7 +881,7 @@ def circ_classify():
     for ii in range(0,6):
       fo.write('##00%d\n'%(ii+1))
       fo.writelines(temp_file_clf[ii])
-      temp_file=temp_file+temp_file_clf2[ii]
+      self.temp_file=temp_file+temp_file_clf2[ii]
       fp.writelines(temp_file_clf2[ii])
    
     fi.close()
@@ -912,11 +890,11 @@ def circ_classify():
         
   print('--------circ_classify finished!!-----')
 
+peptide_prediction.circ_classify=circ_classify
 
 
-
-#---------------------------------------------------
-#---------------------------------------------------
+#----------------------------------------------------
+#-----------------draw translated circRNA------------
 #----------------------------------------------------
 
 try:
@@ -924,23 +902,25 @@ try:
 except ImportError:
   print ('module matplotlib not exists. mstocirc trys to install it for python3.')
   os.system('pip3 install -U matplotlib')
+# judge whether matplotlib is installed already,
+# if not ,it will be tried to install automatically,
 
-def draw_circ():
+def draw_circ(self):
   print('begin to draw circRNAs....')
-  if not os.path.exists(projectn+'/6draw_circ'):
-    os.makedirs(projectn+'/6draw_circ')
-  print('create 6draw_circ file...')
+  if not os.path.exists(projectn+'/temp_draw_circ'):
+    os.makedirs(projectn+'/temp_draw_circ')
+  print('create temp_draw_circ file...')
   print('gain the drawing paramters files...')
-  if not os.path.exists(projectn+'/7option/circ_draw.txt'):
-    circ_corf_info('/6draw_circ')
+  if not os.path.exists(projectn+'/temp_option/circ_draw.txt'):
+    circ_corf_info('/temp_draw_circ')
   else:
-    os.system('cp %s/7option/circ_draw_clf.txt %s/6draw_circ/circ_draw.txt'%(projectn,projectn))
+    os.system('cp %s/temp_option/circ_draw_clf.txt %s/temp_draw_circ/circ_draw.txt'%(projectn,projectn))
   
-  os.system('python3 drawcirc/drawcirc.py '+projectn+'/6draw_circ/circ_draw.txt '+projectn+'/6draw_circ/')
+  os.system('python3 drawcirc/drawcirc.py '+projectn+'/temp_draw_circ/circ_draw.txt '+projectn+'/temp_draw_circ/')
   
   print('-----------draw_circ finished!!-------------------------')  
 
-
+peptide_prediction.draw_circ=draw_circ
 
 
 
@@ -948,6 +928,7 @@ def draw_circ():
 #---------------------------------------------------------------
 #=================main function================================
 #-----------------------------------------------------------------
+#-------------------------------------------------------------------
 
 time_str=time.time()
 now=time.strftime('%y-%m-%d %H:%M:%S',time.localtime())
@@ -957,81 +938,93 @@ projectn='project'+now.split()[0]
 while(os.path.exists(projectn+'.%d'%ii)):
   ii=ii+1
 projectn=projectn+'.%d'%ii
-os.system('mkdir '+projectn)
+
 
 
 
 
 parser = argparse.ArgumentParser()
 group = parser.add_mutually_exclusive_group(required=True)
-parser.add_argument('-p','--peptide',help="peptide file generated by pfind,amino acide",default=None,required=True)
-group.add_argument('-s','--sequence',help="circRNA putitive spliced sequence file",default=None)
+parser.add_argument('-p','--peptide',help="peptide file generated by pfind,amino acide,for example,peptide.txt.",default=None,required=True)
+group.add_argument('-s','--sequence',help="circRNA putitive spliced sequence file, for example,sequence.fasta",default=None)
 #parser.add_argument('-c','--corf',help="circRNA-derived cORF sequqnce,amino acide",default=None)
-parser.add_argument('-j','--junction',help="the BSJ reference of circRNA,amino acide",default=None)
-group.add_argument('-i','--info',help="info file ,including the name,position etc. of circRNA",default=None)
-parser.add_argument("--output", "-o", "-O", help="Output directory", default='./', required=False)
-parser.add_argument('--annote','-a',help='genomic.gtf',required=False)
-parser.add_argument('--genome','-g',help='genome.fna',required=False)
-parser.add_argument('--transcript','-r',help='rna.fna',required=False)
+parser.add_argument('-j','--junction',help="the BSJ reference sequence of circRNA,amino acide,for example,junction.fasta",default=None)
+group.add_argument('-i','--info',help="info file ,including the name,position etc. of circRNA, for example, circRNA_info3.txt. ",default=None)
+parser.add_argument("--output", "-o", "-O", help="Output directory, if not given,the result will be saved in current directory", default='.', required=False)
+parser.add_argument('--annote','-a',help='genomic.gtf of interest species from NCBI.',required=False)
+parser.add_argument('--genome','-g',help='genome.fna of interest specices from NCBI.',required=False)
+parser.add_argument('--transcript','-r',help='transcript sequnce in .fasta of inter species from NCBI',required=False)
 args = parser.parse_args()
 
+#-------------------------
+#make folder,
+#if((args.output).strip('/')!='.'):
+  #os.system('mv ./%s %s'%(projectn,args.output))
+if(args.output[-1]!='/'):
+  args.output=args.output+'/'
+projectn=args.output+projectn
+os.system('mkdir '+projectn) 
+
 #-----------------------------
-#judge the files exists
 print('files check,wait...')
 file_list=[]
 if(not os.path.exists(args.peptide)):
-  file_list.append('peptide')
+  file_list.append(args.peptide)
 if(args.info!=None ):
   if(not os.path.exists(args.info)):
-    file_list.append('info')
+    file_list.append(args.info)
 if(args.sequence!=None):
   if(not os.path.exists(args.sequence)):
-    file_list.append('sequence')
+    file_list.append(args.sequence)
 if(not os.path.exists(args.junction)):
-  file_list.append('junction')
+  file_list.append(args.junction)
 if(file_list!=[]):
   print('file %s not exist,please try again...'%'/'.join(file_list))
   exit(1)
 print('analyse will begin soon,,,')
+#judge whether necessary input files or exists or not,
+# missing file will be printedm in screen,
 #---------------------------------------------
 
 
 fii=open(args.peptide,'r+')
-fii.readline()
+header0=fii.readline()
 temp_file=fii.readlines()
 fii.close()
-file_name=args.peptide.split('/')[-1]
+file_name=(args.peptide).split('/')[-1]
 
-
+Peptide_prediction=peptide_prediction(temp_file,file_name,header0)
 #function part
 #------------------------------------------- 
+Peptide_prediction.funct_print()
 
 #001
-rem_peptide()
+Peptide_prediction.rem_peptide()
 #002
 #map_corf(temp_file)
 #why other can change the value of paramater,but I can't do that, 
-map_corf()
+Peptide_prediction.map_corf()
 #003
-sklearn_coding()
+Peptide_prediction.sklearn_coding()
 #004
-map_junct()
-#
-map_gene()
+Peptide_prediction.map_junct()
 #005
-peptide_merge()
+Peptide_prediction.map_gene()
 #006
-ires_predict()
-#m6a_modification_predict()
-path_analysis()
+Peptide_prediction.peptide_merge()
 #007
-ms_ribo()
+Peptide_prediction.ires_predict()
+#m6a_modification_predict()
 #008
-circ_annote()
+Peptide_prediction.path_analysis()
 #009
-circ_classify()
+Peptide_prediction.ms_ribo()
 #010
-draw_circ()
+Peptide_prediction.circ_annote()
+#011
+Peptide_prediction.circ_classify()
+#012
+Peptide_prediction.draw_circ()
 
 #-----------------------------------------------------------------
 
@@ -1040,27 +1033,35 @@ draw_circ()
 print('generate the result files...')
 if not os.path.exists('%s/result'%projectn):
   os.system('mkdir %s/result'%projectn)
-os.system('cp %s/1mapp_corf/circRNA_corf.txt %s/result'%(projectn,projectn))
+os.system('cp %s/temp_mapp_corf/circRNA_corf.txt %s/result'%(projectn,projectn))
 #os.system('cp -r /4ires_predict /result'.replace(projectn,'/'))
-os.system('cp %s/1mapp_corf/circRNA_exon.fasta %s/result'%(projectn,projectn))
-os.system('cp %s/4ires_predict/circRNA_ires.res %s/result'%(projectn,projectn))
-os.system('cp %s/6draw_circ/circ_draw.txt %s/result'%(projectn,projectn))
-os.system('cp -r %s/5enrich %s/result/'%(projectn,projectn))
-os.system('cp -r %s/6draw_circ %s/result/'%(projectn,projectn))
-if('_ires.txt' in file_name):
-  os.system('cp %s/4ires_predict/%s %s/result'%(projectn,file_name,projectn))
+os.system('cp %s/temp_mapp_corf/circRNA_exon.fasta %s/result'%(projectn,projectn))
+
+txttoxlsx('%s/temp_ires_predict/circRNA_ires.res'%projectn)
+os.system('cp %s/temp_ires_predict/circRNA_ires.xlsx %s/result'%(projectn,projectn))
+
+txttoxlsx('%s/temp_draw_circ/circ_draw.txt'%projectn)
+os.system('cp %s/temp_draw_circ/circ_draw.xlsx %s/result'%(projectn,projectn))
+#os.system('cp -r %s/temp_enrich %s/result/'%(projectn,projectn))
+shutil.move('%s/temp_enrich'%projectn,'%s/result/GO and KEGG'%projectn)
+os.system('cp -r %s/temp_draw_circ %s/result/'%(projectn,projectn))
+
+
+if('_ires.txt' in Peptide_prediction.file_name):
+  Peptide_prediction.file_name=txttoxlsx('%s/temp_ires_predict/%s'%(projectn,Peptide_prediction.file_name))
 else:
-  os.system('cp %s/7option/%s %s/result'%(projectn,file_name,projectn))
+  Peptide_prediction.file_name=txttoxlsx('%s/temp_option/%s'%(projectn,Peptide_prediction.file_name))
+os.system('cp %s %s/result'%(Peptide_prediction.file_name,projectn))
 
 
 
-tempn=' /1mapp_corf /1.5skcoding /2mapp_junct /3peptide_merge /4ires_predict /6draw_circ /7option' 
-# save the predix of temporal file directory
-tempn.replace(projectn+'/','/')
+#tempn=' temp_mapp_corf temp_skcoding temp_mapp_junct temp_peptide_merge temp_ires_predict temp_draw_circ temp_option' 
+# save temporal file directory
 cc=input('delete the temporary file(yes or no??):')
 #cc='no'
 if(cc[0]=='y' or cc[0]=='Y'):
-  os.system('rm -r'+tempn)
+  os.system('rm -rf %s/temp_*'%projectn)
+  
 
 
 time_end=time.time()
@@ -1081,7 +1082,7 @@ fn.write('  information file name: %s\n'%args.info)
 fn.write('\n\n---------------------------------------\n')
 fn.close()
 
-os.system('mv ./%s %s'%(projectn,args.output))
+
 print('\ntotal cost time: %dh %dmin %ds.'%((time_end-time_str)//3600,((time_end-time_str)%3600)//60,(time_end-time_str)%60))
 print('----------------thankyou!!----------------')
 print('===============analyse finished==========')
