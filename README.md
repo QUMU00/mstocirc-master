@@ -30,36 +30,38 @@ project21-10-14.1/
 <td>feature </td><td>function name </td><td> function description</td><td> folder name</td>
 </tr>
 <tr>
-<td>m1</td> <td> map_corf</td><td> map MS-based peptides on circRNA ORF </td><td>temp_mapp_corf </td>
+<td> m1 </td> <td> map_corf</td><td> map MS-based peptides on circRNA ORF </td><td>temp_mapp_corf </td>
 </tr>
 <tr> 
-<td>m2</td><td>sklearn_codinng</td><td>assess the circRNA-derived peptides             </td><td>temp_skcoding</td>
+<td> m2 </td><td> sklearn_codinng </td><td>assess the circRNA-derived peptides </td><td>temp_skcoding</td>
 </tr>
 <tr>
-<td> m3 </td><td>map_junct</td><td> screen MS-based peptide spanning BSJ</td><td> temp_mapp_junct</td>
+<td> m3 </td><td> map_junct </td><td> screen MS-based peptide spanning BSJ</td><td> temp_mapp_junct</td>
 </tr>
 <tr>
-<td>m4</td><td> peptide_merge </td><td> merge the overlapping MS-based peptide          </td><td>temp_peptide_merge</td>
+<td> m4 </td><td> peptide_merge </td><td> merge the overlapping MS-based peptide          </td><td>temp_peptide_merge</td>
 </tr>
 <tr>
-<td>m5 </td><td> ires_predict</td><td> predict all the possible IRES elements          </td><td> temp_ires_predict</td>
+<td> m5 </td><td> ires_predict</td><td> predict all the possible IRES elements </td><td> temp_ires_predict</td>
 </tr>
 <tr>
-<td>m6 </td><td> path_analysis </td><td> GO enrichment and KEGG pathways </td><td> temp_enrich</td>
+<td> m6 </td><td> path_analysis </td><td> GO enrichment and KEGG pathways </td><td> temp_enrich</td>
 </tr>
 <tr>
-<td>m7 </td><td> draw_circ </td><td> draw picture of the circRNAs </td><td> temp-draw_circ</td>
+<td> m7 </td><td> draw_circ </td><td> draw picture of the circRNAs </td><td> temp-draw_circ</td>
 <tr>
-<td>o1 </td><td> rem_peptide </td><td> remove MS-based repeat peptide </td><td> temp_option</td>
+<td> o1 </td><td> rem_peptide </td><td> remove MS-based repeat peptide </td><td> temp_option</td>
 </tr>    
 <tr>
-<td>o2 </td><td> circ_classify</td><td> classify the circRNAs into six groups           </td><td> temp_option</td>
+<td> o2 </td><td> circ_classify </td><td> classify the circRNAs into six groups </td><td> temp_option</td>
 </tr>
 <tr>
 <td>o3</td><td> circ_annote </td><td>annote the circRNA by host gene function </td><td>temp_option</td>
 </tr>
 <tr>
-<td>o4</td><td> ms_ribo </td><td> add directive evidence from Ribo-seq analysis              </td><td>temp_option</td>                           
+<td>o4</td><td> ms_ribo </td><td> add directive evidence from Ribo-seq analysis </td><td> temp_option </td>                           
+</tr>
+<tr><td> o5 </td><td> map_gene </td><td> map the MS-based peptide onto the linear transcript proteins </td><td> temp_option </td>
 </tr>
 </table>
 Finally, generate './result/' folder.
