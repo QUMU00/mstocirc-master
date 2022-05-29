@@ -1,5 +1,5 @@
 # mstocirc-master#
-[https://baike.so.com/gallery/list?ghid=first&pic_idx=1&eid=1790119&sid=1892991](https://baike.so.com/gallery/list?ghid=first&pic_idx=1&eid=1790119&sid=1892991)
+
 ## ONE. Usage description##
 usage: python3 analyze-tool4.py [-h] -p PEPTIDE [-s SEQUENCE] [-j JUNCTION] [-i INFO] [--output OUTPUT] [--annote ANNOTE] [--genome GENOME] [--transcript TRANSCRIPT]<br>
 ### For example:
@@ -80,6 +80,5 @@ Thank you for your downloading and running this tool.If you have any questions, 
 Edited by Zhou Cao on October 4th, 2021.<br>
 Thank you....
 
-[https://matplotlib.org/stable/plot_types/stats/violin.html](https://matplotlib.org/stable/plot_types/stats/violin.html "matplolib")
-[https://imgconvert.csdnimg.cn/aHR0cHM6Ly91cGxvYWQtaW1hZ2VzLmppYW5zaHUuaW8vdXBsb2FkX2ltYWdlcy82NjUyMDItYzgwYzMyZmM1YzZmZjZjYS5wbmc?x-oss-process=image/format,png](https://imgconvert.csdnimg.cn/aHR0cHM6Ly91cGxvYWQtaW1hZ2VzLmppYW5zaHUuaW8vdXBsb2FkX2ltYWdlcy82NjUyMDItYzgwYzMyZmM1YzZmZjZjYS5wbmc?x-oss-process=image/format,png)
+
 
