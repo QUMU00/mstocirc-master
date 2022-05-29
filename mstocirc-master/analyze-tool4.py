@@ -20,8 +20,14 @@ from header.pepmerge import peptide_merge_lr
 
 def txttoxlsx(path):
   fi=open(path,'r+')
+  first_line=fi.readline()
+  pd_data=pandas.DataFrame(columns=first_line.split('\t'))
   data1=fi.readlines()
-  pd_data=pandas.DataFrame(data1)
+  counter=0
+  for line in data1:
+    pd_data.loc[counter]=line.split('\t')
+    counter=counter+1
+  #pd_data=pandas.DataFrame(data1)
   pd_file_name=path[::-1].split('.',1)[-1][::-1]+'.xlsx'
   pd_data.to_excel(pd_file_name,sheet_name='1111',index=False)
 
@@ -59,7 +65,7 @@ class peptide_prediction():
 ##functions: when there exist same peptide sequence in the peptide, the func can remove the same ones
 def rem_peptide(self):
   print('begin to remove the same peptide sequence...')
-  cc=input('whether to remove the repeat peptides(yse or no):')
+  cc=input('whether to remove the repeat peptides(yes or no):')
   #cc='yes'
   if(cc[0]=='Y' or cc[0]=='y'):
     if not os.path.exists(projectn+'/temp_option'):
@@ -129,8 +135,9 @@ def map_corf(self):
   fj=open(projectn+'/temp_mapp_corf/circRNA_corf.txt','r+')
   fo=open(projectn+'/temp_mapp_corf/'+self.file_name,'w+')
   
-  
-  self.header='sequence\tspecificity\tcircRNA\thost_gene\tcorf\n'
+  first_line=self.header
+  #self.header='sequence\tspecificity\tcircRNA\thost_gene\tcorf\n'
+  self.header='\t'.join(first_line.split('\t')[:3]+['host_gene','corf\n'])
   fo.write(self.header)
   
   print('step2: map the peptide onto the corf,,,')
@@ -211,7 +218,9 @@ def sklearn_coding(self):
   file_name2=self.file_name
   self.file_name=self.file_name.split('.')[0]+'_sklc.txt'
   fo=open(projectn+'/temp_skcoding/'+self.file_name,'w+')
-  self.header='sequence\tspecificity\tcircRNA\thost_gene\tcoding_potential\tcorf\n'
+  #self.header='sequence\tspecificity\tcircRNA\thost_gene\tcoding_potential\tcorf\n'
+  first_line=self.header
+  self.header='\t'.join((first_line.split('\t')).insert(-1,'coding_potential'))
   fo.write(self.header)
   
   os.system('python3 sklearn/sklearn_coding.py  sklearn/data %s/temp_mapp_corf/%s %s/temp_skcoding/%s'%(projectn,file_name2,projectn,self.file_name))
@@ -235,7 +244,9 @@ def map_junct(self):
   fi=open(args.junction,'r+')
   #fj=open(projectn+'/1mapp_corf/peptide_corf.txt','r+')
   fo=open(projectn+'/temp_mapp_junct/' +self.file_name,'w+')
-  self.header='BSJ_span\tpeptide\tspecificity\tcircRNA\thost_gene\tcoding_potential\tcorf_aa\n'
+  #self.header='BSJ_span\tpeptide\tspecificity\tcircRNA\thost_gene\tcoding_potential\tcorf_aa\n'
+  first_line=self.header
+  self.header='\t'.join((first_line.split('\t')).insert(0,'BSJ_span'))
   fo.write(self.header)
 
   reh=[]
@@ -367,7 +378,9 @@ def peptide_merge(self):
   self.file_name=self.file_name.split('.')[0]+'_exd.txt'
   fo=open(projectn+'/temp_peptide_merge/'+self.file_name,'w+')
   #fi=open(projectn+'/temp_mapp_junct/peptide_corf_junct.txt','r+')
-  self.header='BSJ_span\tpeptide\tmerge_peptide\tspecificity\tcircRNA\thost_gene\tcoding_potential\tcorf\n'
+  #self.header='BSJ_span\tpeptide\tmerge_peptide\tspecificity\tcircRNA\thost_gene\tcoding_potential\tcorf\n'
+  first_line=self.header
+  self.header='\t'.join((first_line.split('\t')).insert(2,'merge_peptide'))
   fo.write(self.header)
   temp_file_merge=[]
   arr=[]
@@ -433,7 +446,9 @@ def ires_predict(self):
   fj=open(projectn+'/temp_mapp_corf/circRNA_exon.fasta','r+')
   fo=open(projectn+'/temp_ires_predict/'+self.file_name,'w+')
   
-  self.header='BSJ_span\tpeptide\tmerge_peptide\tspecificty\tcircRNA\thost_gene\tIRES_element\tcoding_potential\tcorf\n'
+  #self.header='BSJ_span\tpeptide\tmerge_peptide\tspecificty\tcircRNA\thost_gene\tIRES_element\tcoding_potential\tcorf\n'
+  first_line=self.header
+  self.header='\t'.join((first_line.split('\t')).insert(-2,'IRES_element'))
   fo.write(self.header)
   file_num=1
   fp=open(projectn+'/temp_ires_predict/circRNA_ires_%d.fasta'%file_num,'w+')
@@ -591,7 +606,7 @@ def m6a_modification_predict():
 #------------------------------------------------------
 #------------------------------------------------------
 def path_analysis(self):
-  print('begin to run path_analysis')
+  print('begin to run GO and KEGG analysis.')
   #cc=input('R must be installed,whether to RUN(yes or no):')
   cc='yes'
   if(cc[0]=='Y' or cc[0]=='y'):
@@ -630,7 +645,7 @@ peptide_prediction.path_analysis=path_analysis
 #------------------------------------------------------
 def ms_ribo(self):
   print('begin to run ms_ribo...')
-  cc=input('need provide ribo evidence in .fasta, whether to run: ')
+  cc=input('need provide ribo evidence in .fasta, whether to run(yes or no): ')
   #cc='no'
   if(cc[0]=='Y' or cc[0]=='y'):
     if not os.path.exists(projectn+'/temp_option'):
@@ -652,7 +667,9 @@ def ms_ribo(self):
     print('loading files over...')
     fm=open(args.junction,'r+')
     
-    self.header='BSJ_span\tpeptide\tmerge_peptide\tspecificty\tcircRNA\thost_gene\tIRES_element\tcoding_potential\tRibo_evidence\tcorf\n'
+    
+    first_line=self.header
+    self.header='\t'.join((first_line.split('\t')).insert(-1,'Ribo_evidence'))
     fo.write(self.header)
     if not os.path.exists(projectn+'/temp_option'):
       os.makedirs(projectn+'/temp_option')
@@ -731,7 +748,7 @@ def circ_annote(self):
       os.system('mkdir '+projectn+'/temp_option')
     self.file_name=self.file_name.split('.')[0]+'_anno.txt'
     fo=open(projectn+'/temp_option/'+self.file_name,'w+')
-    file_p=input('input annotion.gtf name:')
+    file_p=input('input gene biological function description file:')
     while( not os.path.exists(file_p)):
       file_p=input('file not exists ,input annotion.gtf name again ,or q() to exit:')
       if(file_p=='q()'):
@@ -741,12 +758,11 @@ def circ_annote(self):
     #file_p='Araport11_functional_descriptions_20190930.txt'
     fi=open(file_p,'r+')
     temp_file_si=fi.readlines()
-    #fo.write('BSJ_span\tpeptide\tmerge_peptide\tspecifity\tcircRNA\thost_gene\tIRES\tcorf\tfunction\n')
-    self.header='BSJ_span\tpeptide\tmerge_peptide\tspecifity\tcircRNA\thost_gene\tIRES\tcoding_potential\tcorf\trelative function description\n'
-    ssst=self.header.split('\t')
-    if('ribo' in self.file_name):
-      ssst.insert(-2,'Ribo_evidence')
-    fo.write('\t'.join(ssst))
+    
+    #self.header='BSJ_span\tpeptide\tmerge_peptide\tspecifity\tcircRNA\thost_gene\tIRES\tcoding_potential\tcorf\trelative function description\n'
+    self.header=self.header[:-1]+'\trelative function description\n'
+    fo.write(self.header)
+
     temp_file_anno=[]
     for sj in self.temp_file:
       sjt=sj.strip().split('\t')
@@ -772,7 +788,7 @@ peptide_prediction.circ_annote=circ_annote
 
   
 def circ_corf_info(strr):
-  print('extract the....')
+  print('extract the translated circRNA prediction information...')
   fi=open(projectn+'/temp_ires_predict/circ_draw.txt','r+')
   fj=open(projectn+'/temp_mapp_corf/circRNA_corf.txt','r+')
   fo=open(projectn+'%s/circ_draw.txt'%strr,'w+')
@@ -921,6 +937,15 @@ def draw_circ(self):
   print('-----------draw_circ finished!!-------------------------')  
 
 peptide_prediction.draw_circ=draw_circ
+
+
+
+
+
+
+
+
+
 
 
 
