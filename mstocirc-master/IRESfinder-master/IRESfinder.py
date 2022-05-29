@@ -39,6 +39,7 @@ def if_fasta(infile):
 def PrintResult(ids,labels,probability,outputfile):
         
   Tabel = 'ID' + '\t' + 'Index' + '\t' + 'Score' + '\n'
+  #print(labels)
   outputfile.write(Tabel)
   for i in range(len(ids)):
 #  transcriptid = ids[i].strip()
@@ -68,7 +69,7 @@ parse.add_option("-s","--step",dest="step",action="store",metavar='step size of 
 
 
 (options,args) = parse.parse_args()
-print('IRES analyse...')
+print('IRES elements analyze...')
 
 #check input and output files
 if options.model == '2':
@@ -107,7 +108,8 @@ os.system('touch temp_inputfile.seq tmp_outputlab.txt')
 
 
 if options.model == '2':
-  os.system('perl '+ IRESFINDERPATH + '/module/handlemodel2.pl '+ inPutFileName + ' '+ temp_inPutFileName + ' '+ temp_outputlab + ' '+ options.window + ' '+ options.step)
+  #os.system('perl '+ IRESFINDERPATH + '/module/handlemodel2.pl '+ inPutFileName + ' '+ temp_inPutFileName + ' '+ temp_outputlab + ' '+ options.window + ' '+ options.step)
+   os.system('python3 '+ IRESFINDERPATH + '/module/handlemodel2.py '+ inPutFileName + ' '+ temp_inPutFileName + ' '+ temp_outputlab + ' '+ options.window + ' '+ options.step)
 else:
   os.system('perl '+ IRESFINDERPATH + '/module/handlemodel0or1.pl '+ inPutFileName + ' '+ temp_inPutFileName + ' '+ temp_outputlab)
 
@@ -116,7 +118,8 @@ else:
 #==============================================================================
 temp_features = 'tmp_features.txt'
 #os.system('touch tmp_teatures.txt')
-os.system('perl '+ IRESFINDERPATH + '/module/calculate_features.pl '+ temp_inPutFileName + ' '+ temp_features)
+#os.system('perl '+ IRESFINDERPATH + '/module/calculate_features.pl '+ temp_inPutFileName + ' '+ temp_features)
+os.system('python3 '+ IRESFINDERPATH + '/module/calculate_features.py '+ temp_inPutFileName + ' '+ temp_features)
 
 #==============================================================================
 #  To built a logit model with the training dataset
