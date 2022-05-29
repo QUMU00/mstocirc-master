@@ -2,6 +2,8 @@
 __Author__='QUMU00'
 
 import numpy
+import matplotlib
+matplotlib.use('agg')
 import matplotlib.pyplot as pltt
 import random 
 import sys
