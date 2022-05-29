@@ -63,13 +63,16 @@ def PrintResult(ids,labels,probability,outputfile):
 parse=optparse.OptionParser()
 parse.add_option('-f','--file',dest='file',action='store',metavar='input files',help="enter transcripts in .fasta format")
 parse.add_option('-o','--out',dest='outfile',action='store',metavar='output files',help='assign your output file')
-parse.add_option('-m','--model',dest='model',action="store",metavar='handle model',default="0",help="Please select your model for handling transcripts: 0, default, just using the complete transcript sequences; 1, optional, using the subsequences specified by the index (e.g. >id start_pos end_pos); 2, optional, spliting the transcript into fragments, please provides the window size (-w, defualt 174) and the step size (-s, defualt 50);")
+parse.add_option('-m','--model',dest='model',action="store",metavar='handle model',default="2",help="Please select your model for handling transcripts: 0, default, just using the complete transcript sequences; 1, optional, using the subsequences specified by the index (e.g. >id start_pos end_pos); 2, optional, spliting the transcript into fragments, please provides the window size (-w, defualt 174) and the step size (-s, defualt 50);")
 parse.add_option("-w","--window",dest="window",action="store",metavar='sliding window size',default="174",help="Ignore this option if the selected model is not 2.")
 parse.add_option("-s","--step",dest="step",action="store",metavar='step size of the sliding window',default="50",help="Ignore this option if the selected model is not 2.")
 
 
 (options,args) = parse.parse_args()
+
 print('IRES elements analyze...')
+print('In mstocirc , only  model 3 is needed , and model 0 /1 is discaded.  ')
+print('For more models, please visit https://github.com/xiaofengsong/IRESfinder/tree/master/dataset.')
 
 #check input and output files
 if options.model == '2':
@@ -77,11 +80,11 @@ if options.model == '2':
     if not (file):
       parse.print_help()
       sys.exit(0)
-else:
-  for file in ([options.file,options.outfile]):
-    if not (file):
-      parse.print_help()
-      sys.exit(0)
+#else:
+#  for file in ([options.file,options.outfile]):
+#    if not (file):
+#      parse.print_help()
+#      sys.exit(0)
 
 inPutFileName=''
 file_format = if_fasta(options.file)
@@ -110,14 +113,17 @@ os.system('touch temp_inputfile.seq tmp_outputlab.txt')
 if options.model == '2':
   #os.system('perl '+ IRESFINDERPATH + '/module/handlemodel2.pl '+ inPutFileName + ' '+ temp_inPutFileName + ' '+ temp_outputlab + ' '+ options.window + ' '+ options.step)
    os.system('python3 '+ IRESFINDERPATH + '/module/handlemodel2.py '+ inPutFileName + ' '+ temp_inPutFileName + ' '+ temp_outputlab + ' '+ options.window + ' '+ options.step)
-else:
-  os.system('perl '+ IRESFINDERPATH + '/module/handlemodel0or1.pl '+ inPutFileName + ' '+ temp_inPutFileName + ' '+ temp_outputlab)
+#else:
+  #os.system('perl '+ IRESFINDERPATH + '/module/handlemodel0or1.pl '+ inPutFileName + ' '+ temp_inPutFileName + ' '+ temp_outputlab)
+  #print('In mstocirc , only  model 3 is needed , and model 0 /1 is discaded.  ')
+  #print('For more models, please visit https://github.com/xiaofengsong/IRESfinder/tree/master/dataset')
+  #sys.exit()
 
 #==============================================================================
 #  Calculating 19 selected fuzzy k-mer features
 #==============================================================================
 temp_features = 'tmp_features.txt'
-#os.system('touch tmp_teatures.txt')
+os.system('touch tmp_teatures.txt')
 #os.system('perl '+ IRESFINDERPATH + '/module/calculate_features.pl '+ temp_inPutFileName + ' '+ temp_features)
 os.system('python3 '+ IRESFINDERPATH + '/module/calculate_features.py '+ temp_inPutFileName + ' '+ temp_features)
 
