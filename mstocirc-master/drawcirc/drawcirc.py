@@ -392,13 +392,15 @@ for si in fi.readlines():
   drawcirclew(si.strip(),sys.argv[2])
   if(cc[0]=='y' or cc[0]=='Y'):
     pltt.show()
-  if(count>=10):
-    #when drawing more than 20 firgures, program automatically exits  
+  if(count>=100):
+    #when drawing more than 200firgures, program automatically exits  
     print('there will consume too many memory while more \
-than 10 figures is opened.\nyou can set the input\
+than 100figures is opened.\nyou can set the input\
 file to draw the specific circRNA.\
 \nthankyou.')
     break
   count=count+1
+  pltt.clf()
+  pltt.close()
 fi.close()
 
