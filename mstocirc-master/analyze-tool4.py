@@ -299,7 +299,7 @@ peptide_prediction.map_junct=map_junct
 #-----------------------------------------------------
 def map_gene(self):
   print('begin to run map_gene...')
-  cc=input('whther map the peptides onto the linear protein(yes or no): ')
+  cc=input('whether map the peptides onto the linear protein(yes or no): ')
   #cc='no'
   if(cc[0]=='y' or cc[0]=='Y'):
     if( not os.path.exists(projectn+'/temp_option')):
