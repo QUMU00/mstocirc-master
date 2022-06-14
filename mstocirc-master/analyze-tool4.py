@@ -13,6 +13,7 @@ import shutil
 import pandas
 from header.pepsort import mergeSort
 from header.pepmerge import peptide_merge_lr
+from header.AAcalculate import AAcalculate
 
 
 #-----------------------------------------------
@@ -219,8 +220,9 @@ def sklearn_coding(self):
   self.file_name=self.file_name.split('.')[0]+'_sklc.txt'
   fo=open(projectn+'/temp_skcoding/'+self.file_name,'w+')
   #self.header='sequence\tspecificity\tcircRNA\thost_gene\tcoding_potential\tcorf\n'
-  first_line=self.header
-  self.header='\t'.join((first_line.split('\t')).insert(-1,'coding_potential'))
+  first_line=self.header.split('\t')
+  first_line.insert(-1,'coding_potential')
+  self.header='\t'.join(first_line)
   fo.write(self.header)
   
   os.system('python3 sklearn/sklearn_coding.py  sklearn/data %s/temp_mapp_corf/%s %s/temp_skcoding/%s'%(projectn,file_name2,projectn,self.file_name))
@@ -245,8 +247,9 @@ def map_junct(self):
   #fj=open(projectn+'/1mapp_corf/peptide_corf.txt','r+')
   fo=open(projectn+'/temp_mapp_junct/' +self.file_name,'w+')
   #self.header='BSJ_span\tpeptide\tspecificity\tcircRNA\thost_gene\tcoding_potential\tcorf_aa\n'
-  first_line=self.header
-  self.header='\t'.join((first_line.split('\t')).insert(0,'BSJ_span'))
+  first_line=self.header.split('\t')
+  first_line.insert(0,'BSJ_span')
+  self.header='\t'.join(first_line)
   fo.write(self.header)
 
   reh=[]
@@ -299,7 +302,7 @@ peptide_prediction.map_junct=map_junct
 #-----------------------------------------------------
 def map_gene(self):
   print('begin to run map_gene...')
-  cc=input('whether map the peptides onto the linear protein(yes or no): ')
+  cc=input('whther map the peptides onto the linear protein(yes or no): ')
   #cc='no'
   if(cc[0]=='y' or cc[0]=='Y'):
     if( not os.path.exists(projectn+'/temp_option')):
@@ -379,8 +382,9 @@ def peptide_merge(self):
   fo=open(projectn+'/temp_peptide_merge/'+self.file_name,'w+')
   #fi=open(projectn+'/temp_mapp_junct/peptide_corf_junct.txt','r+')
   #self.header='BSJ_span\tpeptide\tmerge_peptide\tspecificity\tcircRNA\thost_gene\tcoding_potential\tcorf\n'
-  first_line=self.header
-  self.header='\t'.join((first_line.split('\t')).insert(2,'merge_peptide'))
+  first_line=self.header.split('\t')
+  first_line.insert(2,'merge_peptide')
+  self.header='\t'.join(first_line)
   fo.write(self.header)
   temp_file_merge=[]
   arr=[]
@@ -447,8 +451,9 @@ def ires_predict(self):
   fo=open(projectn+'/temp_ires_predict/'+self.file_name,'w+')
   
   #self.header='BSJ_span\tpeptide\tmerge_peptide\tspecificty\tcircRNA\thost_gene\tIRES_element\tcoding_potential\tcorf\n'
-  first_line=self.header
-  self.header='\t'.join((first_line.split('\t')).insert(-2,'IRES_element'))
+  first_line=self.header.split('\t')
+  first_line.insert(-2,'IRES_element')
+  self.header='\t'.join(first_line)
   fo.write(self.header)
   file_num=1
   fp=open(projectn+'/temp_ires_predict/circRNA_ires_%d.fasta'%file_num,'w+')
@@ -656,80 +661,71 @@ def ms_ribo(self):
     print('create 2 files for result saving...')
     fo=open(projectn+'/temp_option/'+self.file_name,'w+')
     fp=open(projectn+'/temp_option/'+self.file_name.replace('_ribo','_ribo2'),'w+')
-    file_ribo=input('please input the ribo ribo-seq evidence file(.faa):')
+    file_ribo=input('please input the Ribo-seq evidence file in .FASTA:')
+    #cd=input('nucleotide sequence or amino acide sequence (0 or 1):')
     #file_ribo='ath_pep.fa.faa'
     while(not os.path.exists(file_ribo)):
       file_ribo=input('file not exists, input again or q() for exit:')
       if (file_p=='q()'):
         print('-----------------ms_ribo finished!!-----------------------')
 
-    fj=open(file_ribo,'r+')
+    fribo=open(file_ribo,'r+')
     print('loading files over...')
-    fm=open(args.junction,'r+')
+    #fm=open(args.junction,'r+')
+    fm=open(projectn+'temp_ires_predict/circRNA_ires.fasta','r+')
     
-    
-    first_line=self.header
-    self.header='\t'.join((first_line.split('\t')).insert(-1,'Ribo_evidence'))
+    first_line=self.header.split('\t')
+    first_line.insert(-1,'Ribo_evidence')
+    self.header='\t'.join(first_line)
     fo.write(self.header)
     if not os.path.exists(projectn+'/temp_option'):
       os.makedirs(projectn+'/temp_option')
     
      
-    sjl=fj.readlines()
-    temp_ribo=[[],[],[]]
-    dict_rb=dict()
+    ribo_ref=dict()
+    circ=''
+    circ_seq=''
+    for mline in fm.readlines():
+      if ">" in mline:
+        circ=mline[1:-1]
+        continue
+      circ_seq=mline[:-1]+mline[:-1]
+      ribo_ref[circ]=circ_seq
+      circ_seq=''
+    
+    
+    temp_ribo=[]
+    ribo_seq=''
+    for rline in fribo.readlines():
+      if ">" in rline:
+        temp_ribo.append(ribo_seq)
+        ribo_seq=''
+        continue
+      ribo_seq=ribo_seq+rline.strip()
+    temp_ribo.append(ribo_seq)
+        
+
+    vncirc=[]
+    for rline in temp_ribo:
+      for circ in ribo_ref:
+        if rline in ribo_ref[circ]:
+          rpd=ribo_ref[circ].find(circ)
+          if (rpd<len(ribo_ref[circ])//2 and rpd +len(circ)>len(ribo_ref)//2):
+            if(circ not in vncirc):
+              vncirc.append(circ)
+              
     for si in self.temp_file:
       sit=si.split('\t')
-      llk=0
       ribo='N'
-      for sj in sjl:
-        if(sit[4].split('_',1)[1] in sj):
-          temp_ribo[0].append(sit[4].split('_',1)[1]+'\n')
-          ribo='Y'
-          llk=1
-          continue
-        if(llk==1 and sj.strip() in sit[-1]):
-          temp_ribo[1].append(sit[4].split('_',1)[1]+'\n')
-          
-      #if(sit[2] in sj.strip()):
-      #  temp_3.append(sit[4].split('_',1)[1]+'\n')
-          if sit[4].split('_',1)[1] not in dict_rb:
-            dict_rb[sit[4].split('_',1)[1]]=sj.strip()
-          else:
-            dict_rb[sit[4].split('_',1)[1]]=dict_rb[sit[4].split('_',1)[1]]+','+sj.strip()
-          llk=0
+      if sit[4].split("_",1)[-1] in vncirc:
+        ribo='Y'  
       sit.insert(-1,ribo)
       temp_file_ribo.append('\t'.join(sit))
       
-    for sj_ky in dict_rb:
-      #print(dict_rb)
-      lllck=0
-      fm.seek(0,0)
-      while(True):
-        sm=fm.readline().strip()
-        llllck=1
-        if(sm==''):
-          break
-    
-        if(sj_ky in sm):
-          lllck=1
-          #print(sj_ky,sm)
-          sm=fm.readline().strip()
-          md=len(sm)//2
       
-      #print(sm[md-2:md+2],'@'+dict_rb[sj_ky])
-          if(sm[md-2:md+2] in dict_rb[sj_ky]):
-            temp_ribo[2].append(sj_ky+'\n')
-          else:
-            llllck=0
-          if(lllck==1):
-            if(llllck==0):
-              break
     fo.writelines(temp_file_ribo)
     self.temp_file=temp_file_ribo
-    for i in range(0,3):
-      fp.writelines(temp_ribo[i])
-      fp.write('\n---------\n')
+    
 
   print('............ms_ribo finished!!........')
 
@@ -1082,7 +1078,7 @@ os.system('cp %s %s/result'%(Peptide_prediction.file_name,projectn))
 
 #tempn=' temp_mapp_corf temp_skcoding temp_mapp_junct temp_peptide_merge temp_ires_predict temp_draw_circ temp_option' 
 # save temporal file directory
-cc=input('delete the temporary file(yes or no??):')
+cc=input('delete the temporary file (yes or no):')
 #cc='no'
 if(cc[0]=='y' or cc[0]=='Y'):
   os.system('rm -rf %s/temp_*'%projectn)
@@ -1109,7 +1105,7 @@ fn.close()
 
 
 print('\ntotal cost time: %dh %dmin %ds.'%((time_end-time_str)//3600,((time_end-time_str)%3600)//60,(time_end-time_str)%60))
-print('----------------thankyou!!----------------')
+print('----------------thank you!!----------------')
 print('===============analyse finished==========')
 
 
