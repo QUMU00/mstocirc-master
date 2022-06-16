@@ -6,11 +6,11 @@ usage:<br>
 ~$ python3 analyze-tool4.py [-h] -p PEPTIDE [-s SEQUENCE] [-j JUNCTION] [-i INFO] [--output OUTPUT] [--annote ANNOTE] [--genome GENOME] [--transcript TRANSCRIPT]
 <br>
 ```
-<p>
+<p style="marge:0 auto;">
    <img src="https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fnimg.ws.126.net%2F%3Furl%3Dhttp%253A%252F%252Fdingyue.ws.126.net%252F2021%252F0413%252Fa42ac95bj00qrhsip000ec000ht00b5m.jpg%26thumbnail%3D660x2147483647%26quality%3D80%26type%3Djpg&refer=http%3A%2F%2Fnimg.ws.126.net&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1657941807&t=55a2c10a85257fa1b43145fbdce045e4" width="300">
    <img src="https://img1.baidu.com/it/u=3196272413,620674393&fm=253&fmt=auto&app=138&f=JPG?w=729&h=500" width="300">
 </p>
-<img src="https://img1.baidu.com/it/u=1935329263,825017194&fm=253&fmt=auto&app=138&f=PNG?w=1068&h=500">
+<img src="https://img1.baidu.com/it/u=1935329263,825017194&fm=253&fmt=auto&app=138&f=PNG?w=1068&h=500" style="marge:0 auto;"/>
 
 >>### For example: 
 There exits three model for mstocirc to analyse statistics, and below the examples are shown how to set paramaters: 
@@ -88,7 +88,7 @@ Thank you for your downloading and running this tool. If you have any questions,
 Edited by Zhou Cao on October 4th, 2021.<br>Thank you....
 
 
-<center>
-<img src="https://img0.baidu.com/it/u=4197095029,2338689732&fm=253&fmt=auto&app=138&f=JPEG?w=499&h=359">
-</center>
+
+<img src="https://img0.baidu.com/it/u=4197095029,2338689732&fm=253&fmt=auto&app=138&f=JPEG?w=499&h=359" style="marge:0 auto;" />
+
 
