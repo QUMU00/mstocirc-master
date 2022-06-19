@@ -13,7 +13,6 @@ import shutil
 import pandas
 from header.pepsort import mergeSort
 from header.pepmerge import peptide_merge_lr
-from header.AAcalculate import AAcalculate
 
 
 #-----------------------------------------------
